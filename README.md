@@ -147,3 +147,15 @@ genvej "Start sammen med Windows" bruger.
 ## Krav
 
 Windows 10 (version 2004 eller nyere) eller Windows 11, 64 bit. Bygning kræver .NET 10 SDK.
+
+## Licens
+
+[MIT](LICENSE) — kort fortalt: enhver må frit bruge, ændre, dele og videresælge programmet,
+også kommercielt, så længe copyright-teksten følger med. Der gives ingen garanti.
+
+Det er valgt med vilje: skal en synskonsulent, en patientforening eller en kommune kunne
+installere Skærmlup hos dem der har brug for det — eller bygge videre på det — skal der ikke
+først forhandles om lov.
+
+Selve licensteksten står på engelsk. Det er den originale ordlyd, og den bør ikke oversættes:
+en oversættelse ville ikke være den samme juridiske tekst.
