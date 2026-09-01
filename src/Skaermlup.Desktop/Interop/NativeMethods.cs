@@ -24,8 +24,11 @@ internal static partial class NativeMethods
     // Skjuler vinduet for alt skærmkopiering. Uden det ville luppen fotografere sig selv.
     public const uint WDA_EXCLUDEFROMCAPTURE = 0x00000011;
 
+
     // ---------- Beskeder ----------
     public const int WM_HOTKEY = 0x0312;
+
+
     public const int WM_DPICHANGED = 0x02E0;
     public const int WM_DISPLAYCHANGE = 0x007E;
 

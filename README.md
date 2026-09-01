@@ -68,8 +68,27 @@ læse, og ekstra generende når farvesynet i forvejen er svækket. Farven jævne
 tværs af striberne, mens lysstyrken bliver rørt, så kanten bliver liggende præcis hvor den var.
 En rigtig rød knap beholder sin farve, for dens farve er den samme over mange pixels i træk.
 
-**Markøren tegnes selv.** Musepilen kommer ikke med i en skærmkopi. Luppen tegner derfor et
-kryds og en ring dér hvor musen står — med en åbning i midten.
+**Musen virker som den plejer.** Luppen ligger oven på skærmen, men klik går igennem den:
+markøren kan sættes i teksten, filer kan åbnes, knapper kan trykkes. Det kræver både
+`WS_EX_TRANSPARENT` og at vinduet er lagdelt — med kun det første sender Windows klikket til
+luppen i stedet, og det forsvinder.
+
+**Markøren tegnes selv, og den må ikke være i vejen.** Musepilen kommer ikke med i en
+skærmkopi, så luppen tegner selv en markering. Den kan vælges efter hvad man er i gang med:
+
+- **Kryds med hul i midten.** Streger hele vejen ud til kanten, så markøren er let at finde
+  igen. Hullet holder teksten fri, og det bliver større mens musen bevæger sig — under en
+  flytning er der hverken noget at læse eller nogen markør at sætte, men når musen står
+  stille, skal krydset pege så præcist som muligt.
+- **Streg under linjen.** Den vandrette streg lægger sig under tekstlinjen i stedet for hen
+  over den. Beregnet til at skrive med.
+- **Kun en ring**, eller ingen markering.
+
+![Streg under linjen](docs/billeder/markering-understregning.png)
+
+Markeringen er sort på lys baggrund og hvid på mørk, og hver streg har en kant i den modsatte
+farve. En fast farve virker ikke: gult ses tydeligt på mørk bund og forsvinder næsten på en
+hvid side.
 
 **Farver kan vendes.** Syv tilstande: normale farver, kraftig kontrast, omvendte farver, gul på
 sort, sort på gul, hvid på sort og gråtoner, plus kontrast og lysstyrke. Omvendte farver er for
@@ -112,7 +131,7 @@ Skaermlup.Desktop  ──►  Skaermlup.Core
 |---|---|
 | `src/Skaermlup.Core` | Geometri, forstørrelsestrin, farvefiltre, museudløser, indstillinger, alle tekster. Ingen afhængigheder — derfor testbart. |
 | `src/Skaermlup.Desktop` | WPF-vinduer, skærmkopiering, globale muse- og tastaturlyttere. |
-| `tests/Skaermlup.Tests` | 88 enhedstests af kernen. |
+| `tests/Skaermlup.Tests` | 102 enhedstests af kernen. |
 
 ### Sådan vises billedet
 

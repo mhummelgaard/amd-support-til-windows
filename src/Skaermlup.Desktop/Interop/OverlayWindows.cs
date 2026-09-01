@@ -4,9 +4,14 @@ using Skaermlup.Core.Settings;
 namespace Skaermlup.Desktop.Interop;
 
 /// <summary>
-/// Gør et WPF-vindue til et lag der ligger oven på alt andet, ikke kan klikkes på, ikke tager
-/// fokus og ikke kan ses af skærmkopiering. Det sidste er afgørende: uden det ville luppen
+/// Gør et WPF-vindue til et lag der ligger oven på alt andet, ikke tager fokus og ikke kan
+/// ses af skærmkopiering. Det sidste er afgørende: uden det ville luppen
 /// forstørre sit eget billede igen og igen.
+///
+/// At musen går <em>igennem</em> laget kommer af to ting: WS_EX_TRANSPARENT her, og
+/// AllowsTransparency i vinduets XAML. Det sidste får WPF til selv at gøre vinduet lagdelt,
+/// og først med begge dele sender Windows klikket videre til programmet nedenunder. Sætter
+/// man WS_EX_LAYERED i stedet herfra, fjerner WPF den igen med det samme.
 /// </summary>
 internal static class OverlayWindows
 {
@@ -33,7 +38,9 @@ internal static class OverlayWindows
             rect.X, rect.Y, rect.Width, rect.Height, flags);
     }
 
-    /// <summary>Lægger vinduet øverst igen, hvis et andet program har lagt sig ovenpå.</summary>
+    /// <summary>
+    /// Lægger vinduet øverst igen, hvis et andet program har lagt sig ovenpå.
+    /// </summary>
     public static void Reassert(IntPtr hwnd)
     {
         if (hwnd == IntPtr.Zero) return;
@@ -42,25 +49,4 @@ internal static class OverlayWindows
             NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE);
     }
 
-    /// <summary>Klipper vinduet til en rund lup eller et rektangel med bløde hjørner.</summary>
-    public static void ApplyShape(IntPtr hwnd, int width, int height, LensShape shape, int cornerRadius)
-    {
-        if (hwnd == IntPtr.Zero || width <= 0 || height <= 0) return;
-
-        IntPtr region = shape == LensShape.Circle
-            ? NativeMethods.CreateEllipticRgn(0, 0, width + 1, height + 1)
-            : NativeMethods.CreateRoundRectRgn(0, 0, width + 1, height + 1,
-                Math.Max(1, cornerRadius * 2), Math.Max(1, cornerRadius * 2));
-
-        if (region == IntPtr.Zero) return;
-
-        // Windows overtager regionen når kaldet lykkes, og frigiver den selv bagefter.
-        if (NativeMethods.SetWindowRgn(hwnd, region, true) == 0)
-            NativeMethods.DeleteObject(region);
-    }
-
-    public static void ClearShape(IntPtr hwnd)
-    {
-        if (hwnd != IntPtr.Zero) NativeMethods.SetWindowRgn(hwnd, IntPtr.Zero, true);
-    }
 }

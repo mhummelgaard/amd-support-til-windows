@@ -257,10 +257,70 @@
                         <TextBlock Style="{StaticResource H2}" Text="Læsning"/>
                         <CheckBox IsChecked="{Binding FollowCaret, Mode=TwoWay}"
                                   Content="Følg skrivemarkøren, når jeg skriver"/>
-                        <CheckBox IsChecked="{Binding ShowCrosshair, Mode=TwoWay}"
-                                  Content="Vis kryds og ring, så jeg kan se hvor musen er"/>
-                        <TextBlock Style="{StaticResource Hint}" Margin="46,0,0,0"
-                                   Text="Musepilen kommer ikke med i det forstørrede billede. Krydset viser hvor den står."/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ Markeringen ============ -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource H2}" Text="Sådan vises det sted musen peger"/>
+                        <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,12"
+                                   Text="Musepilen kommer ikke med i det forstørrede billede, så luppen tegner selv en markering. Den er sort på lys baggrund og hvid på mørk, så den altid kan ses."/>
+
+                        <RadioButton GroupName="Markering" IsChecked="{Binding MarkerIsCrosshair, Mode=TwoWay}"
+                                     Style="{StaticResource ChoiceTile}">
+                            <StackPanel>
+                                <TextBlock Text="Kryds med hul i midten" FontSize="21" FontWeight="Bold"
+                                           Foreground="{StaticResource Ink}"/>
+                                <TextBlock Text="Streger hele vejen ud til kanten. Hullet i midten holder teksten fri, og det bliver større mens musen bevæger sig."
+                                           FontSize="18" Foreground="{StaticResource InkMuted}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </RadioButton>
+
+                        <RadioButton GroupName="Markering" IsChecked="{Binding MarkerIsUnderline, Mode=TwoWay}"
+                                     Style="{StaticResource ChoiceTile}">
+                            <StackPanel>
+                                <TextBlock Text="Streg under linjen" FontSize="21" FontWeight="Bold"
+                                           Foreground="{StaticResource Ink}"/>
+                                <TextBlock Text="Den vandrette streg lægger sig under tekstlinjen i stedet for hen over den. Bedst når du skriver."
+                                           FontSize="18" Foreground="{StaticResource InkMuted}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </RadioButton>
+
+                        <RadioButton GroupName="Markering" IsChecked="{Binding MarkerIsRing, Mode=TwoWay}"
+                                     Style="{StaticResource ChoiceTile}">
+                            <StackPanel>
+                                <TextBlock Text="Kun en ring" FontSize="21" FontWeight="Bold"
+                                           Foreground="{StaticResource Ink}"/>
+                                <TextBlock Text="Ingen streger. Dækker mindst muligt, men er sværere at få øje på."
+                                           FontSize="18" Foreground="{StaticResource InkMuted}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </RadioButton>
+
+                        <RadioButton GroupName="Markering" IsChecked="{Binding MarkerIsNone, Mode=TwoWay}"
+                                     Style="{StaticResource ChoiceTile}">
+                            <TextBlock Text="Ingen markering" FontSize="21" FontWeight="Bold"
+                                       Foreground="{StaticResource Ink}"/>
+                        </RadioButton>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                            <TextBlock Style="{StaticResource Body}" Text="Størrelse" Width="180"
+                                       VerticalAlignment="Center"/>
+                            <Button Style="{StaticResource StepButton}" Content="−" Command="{Binding MarkerSmallerCommand}"/>
+                            <Border Width="140" Height="72" Margin="12,0" CornerRadius="8"
+                                    Background="{StaticResource SurfaceAlt}"
+                                    BorderBrush="{StaticResource Line}" BorderThickness="2">
+                                <TextBlock Style="{StaticResource Readout}" Text="{Binding MarkerSizeText}"/>
+                            </Border>
+                            <Button Style="{StaticResource StepButton}" Content="+" Command="{Binding MarkerBiggerCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ Billedet ============ -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource H2}" Text="Billedet"/>
                         <CheckBox Margin="0,10,0,0" IsChecked="{Binding SmoothImage, Mode=TwoWay}"
                                   Content="Blødt billede"/>
                         <TextBlock Style="{StaticResource Hint}" Margin="46,0,0,0"

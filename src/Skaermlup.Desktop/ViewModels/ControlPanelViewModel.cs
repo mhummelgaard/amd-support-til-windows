@@ -224,11 +224,39 @@ internal sealed partial class ControlPanelViewModel : ObservableObject
         set => Set(value, s => s.FollowCaret, (s, v) => s.FollowCaret = v);
     }
 
-    public bool ShowCrosshair
+    public bool MarkerIsCrosshair
     {
-        get => S.ShowCrosshair;
-        set => Set(value, s => s.ShowCrosshair, (s, v) => s.ShowCrosshair = v);
+        get => S.Marker == MarkerStyle.Crosshair;
+        set { if (value) Set(MarkerStyle.Crosshair, s => s.Marker, (s, v) => s.Marker = v, nameof(MarkerIsCrosshair)); }
     }
+
+    public bool MarkerIsUnderline
+    {
+        get => S.Marker == MarkerStyle.Underline;
+        set { if (value) Set(MarkerStyle.Underline, s => s.Marker, (s, v) => s.Marker = v, nameof(MarkerIsUnderline)); }
+    }
+
+    public bool MarkerIsRing
+    {
+        get => S.Marker == MarkerStyle.Ring;
+        set { if (value) Set(MarkerStyle.Ring, s => s.Marker, (s, v) => s.Marker = v, nameof(MarkerIsRing)); }
+    }
+
+    public bool MarkerIsNone
+    {
+        get => S.Marker == MarkerStyle.None;
+        set { if (value) Set(MarkerStyle.None, s => s.Marker, (s, v) => s.Marker = v, nameof(MarkerIsNone)); }
+    }
+
+    public string MarkerSizeText => S.MarkerSize + " %";
+
+    [RelayCommand]
+    private void MarkerBigger()
+        => Set(Math.Min(250, S.MarkerSize + 25), s => s.MarkerSize, (s, v) => s.MarkerSize = v, nameof(MarkerSizeText));
+
+    [RelayCommand]
+    private void MarkerSmaller()
+        => Set(Math.Max(50, S.MarkerSize - 25), s => s.MarkerSize, (s, v) => s.MarkerSize = v, nameof(MarkerSizeText));
 
     public bool SmoothImage
     {
@@ -326,7 +354,8 @@ internal sealed partial class ControlPanelViewModel : ObservableObject
         to.Contrast = from.Contrast;
         to.Brightness = from.Brightness;
         to.SmoothImage = from.SmoothImage;
-        to.ShowCrosshair = from.ShowCrosshair;
+        to.Marker = from.Marker;
+        to.MarkerSize = from.MarkerSize;
         to.BorderThickness = from.BorderThickness;
         to.Trigger = from.Trigger;
         to.TriggerMode = from.TriggerMode;

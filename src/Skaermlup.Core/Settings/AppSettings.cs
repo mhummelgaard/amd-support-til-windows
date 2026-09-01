@@ -32,7 +32,12 @@ public sealed class AppSettings
     /// <summary>Blødt forstørret billede. Slås fra hvis brugeren foretrækker skarpe pixelkanter.</summary>
     public bool SmoothImage { get; set; } = true;
 
-    public bool ShowCrosshair { get; set; } = true;
+    /// <summary>Hvordan stedet markøren peger på vises. Musepilen kommer ikke med i en
+    /// skærmkopi, så uden en markering kan brugeren ikke se hvor luppen peger.</summary>
+    public MarkerStyle Marker { get; set; } = MarkerStyle.Crosshair;
+
+    /// <summary>Markeringens størrelse i procent. 100 er udgangspunktet.</summary>
+    public int MarkerSize { get; set; } = 100;
 
     /// <summary>Rammens tykkelse omkring luppen i pixels. Rammen gør det nemt at se hvor luppen er.</summary>
     public int BorderThickness { get; set; } = 6;
@@ -72,6 +77,7 @@ public sealed class AppSettings
         Contrast = Math.Clamp(Contrast, -50, 50);
         Brightness = Math.Clamp(Brightness, -50, 50);
         BorderThickness = Math.Clamp(BorderThickness, 0, 24);
+        MarkerSize = Math.Clamp(MarkerSize, 50, 250);
         InstructionScale = Math.Clamp(InstructionScale, 75, 250);
         MaxFps = Math.Clamp(MaxFps, 15, 120);
 
@@ -79,6 +85,7 @@ public sealed class AppSettings
         if (!Enum.IsDefined(Shape)) Shape = LensShape.Rectangle;
         if (!Enum.IsDefined(DockEdge)) DockEdge = DockEdge.Top;
         if (!Enum.IsDefined(Colors)) Colors = ColorScheme.Normal;
+        if (!Enum.IsDefined(Marker)) Marker = MarkerStyle.Crosshair;
         if (!Enum.IsDefined(TriggerMode)) TriggerMode = TriggerMode.Toggle;
         if (!Enum.IsDefined(Wheel)) Wheel = WheelAction.ModifierOnly;
         if (!Enum.IsDefined(InstructionsAt)) InstructionsAt = InstructionPlacement.Bottom;

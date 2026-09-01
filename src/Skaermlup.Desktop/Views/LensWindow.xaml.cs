@@ -17,6 +17,13 @@ public partial class LensWindow : Window
     private const double RingRadiusDip = 26;
 
     private readonly EdgeUpscaler _upscaler = new();
+    private readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew();
+
+    private PixelPoint _lastMarker;
+    private long _lastMarkerAt;
+    private double _smoothedSpeed;
+    private bool _markerIsLight;
+    private bool _markerColoursApplied;
 
     private WriteableBitmap? _bitmap;
     private byte[] _sourceBuffer = [];
@@ -42,6 +49,12 @@ public partial class LensWindow : Window
     /// på museknappen — og så vi allerede ved opstart ved om Windows kan skjule det.
     /// </summary>
     public void EnsureCreated() => new WindowInteropHelper(this).EnsureHandle();
+
+    /// <summary>
+    /// Sætter lag-typografien på plads igen. WPF rydder den væk når vinduet vises, og uden
+    /// den kan brugeren ikke klikke gennem luppen.
+    /// </summary>
+    public void EnsureClickThrough() => OverlayWindows.Reassert(_handle);
 
     protected override void OnSourceInitialized(EventArgs e)
     {
@@ -69,7 +82,7 @@ public partial class LensWindow : Window
         ApplyBounds(frame.View, settings);
         ApplyChrome(settings);
         WritePixels(frame, capture, map, settings);
-        UpdateMarker(frame, settings);
+        UpdateMarker(frame, capture, settings);
     }
 
     private void ApplyBounds(PixelRect view, AppSettings settings)
@@ -81,7 +94,7 @@ public partial class LensWindow : Window
             _appliedBounds = view;
             _framesSinceReassert = 0;
         }
-        else if (++_framesSinceReassert > 120)
+        else if (++_framesSinceReassert > 30)
         {
             // Et andet program kan have lagt sig øverst. Kravl op igen med jævne mellemrum.
             OverlayWindows.Reassert(_handle);
@@ -91,14 +104,32 @@ public partial class LensWindow : Window
         var shape = settings.Mode == ViewMode.Dock ? LensShape.Rectangle : settings.Shape;
         if (moved || shape != _appliedShape || view.Size != _appliedShapeSize)
         {
-            if (settings.Mode == ViewMode.Dock)
-                OverlayWindows.ClearShape(_handle);
-            else
-                OverlayWindows.ApplyShape(_handle, view.Width, view.Height, shape, 14);
-
+            ApplyClip(settings.Mode, shape, view.Size);
             _appliedShape = shape;
             _appliedShapeSize = view.Size;
         }
+    }
+
+    /// <summary>
+    /// Klipper luppen til sin form. Det gøres i WPF frem for med en vinduesregion, fordi
+    /// vinduet nu tegnes med gennemsigtighed pr. pixel — så bliver kanten blød i stedet for
+    /// at ende som en trappe, og det er den samme kant brugeren ser hele vejen rundt.
+    /// </summary>
+    private void ApplyClip(ViewMode mode, LensShape shape, PixelSize size)
+    {
+        if (mode == ViewMode.Dock)
+        {
+            Root.Clip = null;
+            return;
+        }
+
+        double width = size.Width / GetDpiScaleX();
+        double height = size.Height / GetDpiScaleY();
+        var bounds = new Rect(0, 0, width, height);
+
+        Root.Clip = shape == LensShape.Circle
+            ? new EllipseGeometry(bounds)
+            : new RectangleGeometry(bounds, 10, 10);
     }
 
     private void ApplyChrome(AppSettings settings)
@@ -207,9 +238,9 @@ public partial class LensWindow : Window
         if (buffer.Length < size) buffer = new byte[size];
     }
 
-    private void UpdateMarker(MagnifierFrame frame, AppSettings settings)
+    private void UpdateMarker(MagnifierFrame frame, ScreenCapture capture, AppSettings settings)
     {
-        if (!settings.ShowCrosshair)
+        if (settings.Marker == MarkerStyle.None)
         {
             if (Overlay.Visibility != Visibility.Collapsed) Overlay.Visibility = Visibility.Collapsed;
             return;
@@ -217,22 +248,96 @@ public partial class LensWindow : Window
 
         if (Overlay.Visibility != Visibility.Visible) Overlay.Visibility = Visibility.Visible;
 
+        double scale = Math.Clamp(settings.MarkerSize, 50, 250) / 100.0;
+        int thickness = (int)Math.Round(11 * scale);
+        int ringRadius = (int)Math.Round(26 * scale);
+        int baseGap = (int)Math.Round(30 * scale);
+
+        var layout = MarkerGeometry.Compute(
+            frame.View.Size, frame.Marker, settings.Marker,
+            MarkerGeometry.GapFor(baseGap, MeasureSpeed(frame.Marker)),
+            thickness, ringRadius, UnderlineDrop(frame));
+
+        ApplyMarkerColours(capture);
+
         double scaleX = GetDpiScaleX();
         double scaleY = GetDpiScaleY();
-        double width = frame.View.Width / scaleX;
-        double height = frame.View.Height / scaleY;
-        double x = frame.Marker.X / scaleX;
-        double y = frame.Marker.Y / scaleY;
-        const double lineThickness = 11;
-        double gap = RingRadiusDip;
 
-        Place(CrossLeft, 0, y - lineThickness / 2, Math.Max(0, x - gap), lineThickness);
-        Place(CrossRight, x + gap, y - lineThickness / 2, Math.Max(0, width - (x + gap)), lineThickness);
-        Place(CrossTop, x - lineThickness / 2, 0, lineThickness, Math.Max(0, y - gap));
-        Place(CrossBottom, x - lineThickness / 2, y + gap, lineThickness, Math.Max(0, height - (y + gap)));
+        Place(CrossLeft, layout.Left, scaleX, scaleY);
+        Place(CrossRight, layout.Right, scaleX, scaleY);
+        Place(CrossTop, layout.Top, scaleX, scaleY);
+        Place(CrossBottom, layout.Bottom, scaleX, scaleY);
+        Place(RingOuter, layout.Ring, scaleX, scaleY);
+        Place(RingInner, layout.Ring, scaleX, scaleY);
+    }
 
-        Place(RingOuter, x - gap, y - gap, gap * 2, gap * 2);
-        Place(RingInner, x - gap, y - gap, gap * 2, gap * 2);
+    /// <summary>
+    /// Hvor langt under punktet understregningen lægges. Cirka ni pixels af den oprindelige
+    /// skærm svarer til underkanten af en almindelig tekstlinje, og ganget op med forstørrelsen
+    /// rammer stregen derfor under linjen uanset hvor meget der forstørres.
+    /// </summary>
+    private static int UnderlineDrop(MagnifierFrame frame) => (int)Math.Round(9 * frame.ScaleY);
+
+    /// <summary>Fokuspunktets fart i pixels pr. sekund, brugt til at åbne hullet under flytning.</summary>
+    private double MeasureSpeed(PixelPoint marker)
+    {
+        long now = _clock.ElapsedMilliseconds;
+        long elapsed = now - _lastMarkerAt;
+        _lastMarkerAt = now;
+
+        var previous = _lastMarker;
+        _lastMarker = marker;
+
+        if (elapsed <= 0 || elapsed > 400) return 0;
+
+        double distance = Math.Sqrt(previous.DistanceSquaredTo(marker));
+        double speed = distance * 1000.0 / elapsed;
+
+        // Farten glattes ud, så hullet ikke hopper i takt med de enkelte billeder.
+        _smoothedSpeed = _smoothedSpeed * 0.7 + speed * 0.3;
+        return _smoothedSpeed;
+    }
+
+    /// <summary>
+    /// Markeringen skal kunne ses uanset hvad den ligger oven på. Farven vælges derfor efter
+    /// hvor lyst det forstørrede billede er, og hver streg har en kant i den modsatte farve.
+    /// </summary>
+    private void ApplyMarkerColours(ScreenCapture capture)
+    {
+        bool light = MarkerContrast.PrefersLightMarker(
+            capture.Pixels, capture.Stride, capture.Width, capture.Height, _markerIsLight);
+
+        if (light == _markerIsLight && _markerColoursApplied) return;
+
+        _markerIsLight = light;
+        _markerColoursApplied = true;
+
+        var core = light ? Brushes.White : Brushes.Black;
+        var casing = light ? Brushes.Black : Brushes.White;
+
+        foreach (var bar in new[] { CrossLeft, CrossRight, CrossTop, CrossBottom })
+        {
+            bar.Fill = core;
+            bar.Stroke = casing;
+        }
+
+        RingOuter.Stroke = casing;
+        RingInner.Stroke = core;
+    }
+
+    private static void Place(System.Windows.Shapes.Shape element, PixelRect rect, double scaleX, double scaleY)
+    {
+        if (rect.IsEmpty)
+        {
+            element.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        System.Windows.Controls.Canvas.SetLeft(element, rect.X / scaleX);
+        System.Windows.Controls.Canvas.SetTop(element, rect.Y / scaleY);
+        element.Width = rect.Width / scaleX;
+        element.Height = rect.Height / scaleY;
+        element.Visibility = Visibility.Visible;
     }
 
     private static void Place(FrameworkElement element, double left, double top, double width, double height)

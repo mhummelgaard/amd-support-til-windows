@@ -4,7 +4,7 @@
         Title="Skærmlup"
         WindowStyle="None"
         ResizeMode="NoResize"
-        AllowsTransparency="False"
+        AllowsTransparency="True"
         ShowInTaskbar="False"
         ShowActivated="False"
         Topmost="True"
@@ -26,12 +26,12 @@
              brugeren ikke kunne se hvor på skærmen luppen står. Linjerne stopper før
              ringen, så teksten lige under markøren ikke bliver dækket. -->
         <Canvas x:Name="Overlay" IsHitTestVisible="False">
-            <Rectangle x:Name="CrossLeft"   Fill="#FFF5B301" Stroke="#FF000000" StrokeThickness="2" Opacity="0.62"/>
-            <Rectangle x:Name="CrossRight"  Fill="#FFF5B301" Stroke="#FF000000" StrokeThickness="2" Opacity="0.62"/>
-            <Rectangle x:Name="CrossTop"    Fill="#FFF5B301" Stroke="#FF000000" StrokeThickness="2" Opacity="0.62"/>
-            <Rectangle x:Name="CrossBottom" Fill="#FFF5B301" Stroke="#FF000000" StrokeThickness="2" Opacity="0.62"/>
-            <Ellipse   x:Name="RingOuter" Stroke="#FF000000" StrokeThickness="7"/>
-            <Ellipse   x:Name="RingInner" Stroke="#FFF5B301" StrokeThickness="3"/>
+            <Rectangle x:Name="CrossLeft"   StrokeThickness="2" Opacity="0.82"/>
+            <Rectangle x:Name="CrossRight"  StrokeThickness="2" Opacity="0.82"/>
+            <Rectangle x:Name="CrossTop"    StrokeThickness="2" Opacity="0.82"/>
+            <Rectangle x:Name="CrossBottom" StrokeThickness="2" Opacity="0.82"/>
+            <Ellipse   x:Name="RingOuter" StrokeThickness="7"/>
+            <Ellipse   x:Name="RingInner" StrokeThickness="3"/>
         </Canvas>
 
         <!-- Rammen om luppen. Den gør det tydeligt hvor luppen holder op og skærmen

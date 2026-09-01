@@ -80,6 +80,7 @@ internal sealed class MagnifierService : IDisposable
 
         _lens ??= new LensWindow();
         _lens.Show();
+        _lens.EnsureClickThrough();
 
         IsActive = true;
 

@@ -24,6 +24,22 @@ public enum DockEdge
     Bottom = 1,
 }
 
+/// <summary>Hvordan det sted markøren peger på bliver vist.</summary>
+public enum MarkerStyle
+{
+    /// <summary>Kryds med hul i midten, så teksten under markøren ikke dækkes.</summary>
+    Crosshair = 0,
+
+    /// <summary>Streg under tekstlinjen i stedet for hen over den, plus en ring om stedet.</summary>
+    Underline = 1,
+
+    /// <summary>Kun en ring. Dækker mindst muligt.</summary>
+    Ring = 2,
+
+    /// <summary>Ingen markering.</summary>
+    None = 3,
+}
+
 /// <summary>Farvebehandling af det forstørrede billede.</summary>
 public enum ColorScheme
 {
