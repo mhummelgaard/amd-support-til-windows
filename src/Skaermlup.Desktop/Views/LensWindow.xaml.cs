@@ -16,7 +16,11 @@ public partial class LensWindow : Window
 {
     private const double RingRadiusDip = 26;
 
+    private readonly EdgeUpscaler _upscaler = new();
+
     private WriteableBitmap? _bitmap;
+    private byte[] _sourceBuffer = [];
+    private byte[] _frameBuffer = [];
     private PixelRect _appliedBounds;
     private LensShape _appliedShape = (LensShape)(-1);
     private PixelSize _appliedShapeSize;
@@ -64,7 +68,7 @@ public partial class LensWindow : Window
 
         ApplyBounds(frame.View, settings);
         ApplyChrome(settings);
-        WritePixels(capture, map);
+        WritePixels(frame, capture, map, settings);
         UpdateMarker(frame, settings);
     }
 
@@ -119,33 +123,88 @@ public partial class LensWindow : Window
         }
     }
 
-    private void WritePixels(ScreenCapture capture, ColorMap map)
+    /// <summary>
+    /// Ved lav forstørrelse er det billigst at sende det lille udsnit direkte til
+    /// grafikkortet og lade det skalere op. Ved høj forstørrelse bliver den opskalering
+    /// udflydende, og så regnes billedet i stedet ud i fuld størrelse med kantstyret
+    /// forstørrelse, så bogstaverne bliver skarpe.
+    /// </summary>
+    private void WritePixels(MagnifierFrame frame, ScreenCapture capture, ColorMap map, AppSettings settings)
+    {
+        double zoom = Math.Min(frame.ScaleX, frame.ScaleY);
+
+        if (settings.SmoothImage && EdgeUpscaler.IsWorthwhile(zoom))
+            WriteSharpened(frame, capture, map, zoom);
+        else
+            WriteDirect(capture, map);
+    }
+
+    private void WriteDirect(ScreenCapture capture, ColorMap map)
     {
         int width = capture.Width;
         int height = capture.Height;
+        var bitmap = EnsureBitmap(width, height);
 
+        bitmap.Lock();
+        try
+        {
+            unsafe
+            {
+                var destination = new Span<byte>((void*)bitmap.BackBuffer, bitmap.BackBufferStride * height);
+                ColorPipeline.Apply(capture.Pixels, capture.Stride, destination, bitmap.BackBufferStride,
+                    width, height, map);
+            }
+
+            bitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
+        }
+        finally
+        {
+            bitmap.Unlock();
+        }
+    }
+
+    private void WriteSharpened(MagnifierFrame frame, ScreenCapture capture, ColorMap map, double zoom)
+    {
+        int sourceWidth = capture.Width;
+        int sourceHeight = capture.Height;
+        int sourceStride = sourceWidth * 4;
+
+        // Farvebehandlingen sker på det lille udsnit, altså på en brøkdel af de pixels
+        // den ellers skulle røre ved.
+        EnsureBuffer(ref _sourceBuffer, sourceHeight * sourceStride);
+        ColorPipeline.Apply(capture.Pixels, capture.Stride, _sourceBuffer, sourceStride,
+            sourceWidth, sourceHeight, map);
+
+        // ClearTypes farvede kanter hjælper kun ved skærmens egen opløsning. Forstørret
+        // bliver de til røde og blå bræmmer langs bogstaverne.
+        SubpixelFringe.Remove(_sourceBuffer, sourceStride, sourceWidth, sourceHeight);
+
+        int width = frame.View.Width;
+        int height = frame.View.Height;
+        int stride = width * 4;
+        var bitmap = EnsureBitmap(width, height);
+
+        EnsureBuffer(ref _frameBuffer, height * stride);
+        _upscaler.Upscale(_sourceBuffer, sourceStride, sourceWidth, sourceHeight,
+            _frameBuffer, stride, width, height, EdgeUpscaler.SteepnessFor(zoom));
+
+        bitmap.WritePixels(new Int32Rect(0, 0, width, height), _frameBuffer, stride, 0);
+    }
+
+    private WriteableBitmap EnsureBitmap(int width, int height)
+    {
         if (_bitmap is null || _bitmap.PixelWidth != width || _bitmap.PixelHeight != height)
         {
             _bitmap = new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgr32, null);
             Surface.Source = _bitmap;
         }
 
-        _bitmap.Lock();
-        try
-        {
-            unsafe
-            {
-                var destination = new Span<byte>((void*)_bitmap.BackBuffer, _bitmap.BackBufferStride * height);
-                ColorPipeline.Apply(capture.Pixels, capture.Stride, destination, _bitmap.BackBufferStride,
-                    width, height, map);
-            }
+        return _bitmap;
+    }
 
-            _bitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
-        }
-        finally
-        {
-            _bitmap.Unlock();
-        }
+    private static void EnsureBuffer(ref byte[] buffer, int size)
+    {
+        if (buffer.Length < size) buffer = new byte[size];
     }
 
     private void UpdateMarker(MagnifierFrame frame, AppSettings settings)

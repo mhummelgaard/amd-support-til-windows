@@ -16,19 +16,34 @@ public partial class App : Application
     private Mutex? _instanceLock;
     private EventWaitHandle? _showPanelSignal;
     private RegisteredWaitHandle? _showPanelWait;
+    private EventWaitHandle? _sampleSignal;
+    private RegisteredWaitHandle? _sampleWait;
     private AppShell? _shell;
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        string? sampleFolder = SampleFolder(e.Args);
+
         // Ét program ad gangen. To lyttere på musen ville skændes om den samme knap,
         // og brugeren ville få to lupper oven på hinanden.
         _instanceLock = new Mutex(initiallyOwned: true, InstanceKey, out bool isFirstInstance);
         _showPanelSignal = new EventWaitHandle(false, EventResetMode.AutoReset, InstanceKey + ".VisPanel");
+        _sampleSignal = new EventWaitHandle(false, EventResetMode.AutoReset, InstanceKey + ".Proevebillede");
 
         if (!isFirstInstance)
         {
-            // Programmet kører allerede. Bed det om at vise kontrolpanelet og luk os selv.
-            _showPanelSignal.Set();
+            // Programmet kører allerede. Send beskeden videre til den kopi der har luppen,
+            // og luk os selv igen.
+            if (sampleFolder is not null)
+            {
+                SampleRequest.Write(sampleFolder);
+                _sampleSignal.Set();
+            }
+            else
+            {
+                _showPanelSignal.Set();
+            }
+
             Shutdown();
             return;
         }
@@ -43,7 +58,6 @@ public partial class App : Application
         _shell = new AppShell(store, store.Load());
 
         bool silentStart = e.Args.Any(a => string.Equals(a, StartArgument, StringComparison.OrdinalIgnoreCase));
-        string? sampleFolder = SampleFolder(e.Args);
 
         _shell.Start(startMagnifier: silentStart || sampleFolder is not null);
 
@@ -61,6 +75,20 @@ public partial class App : Application
             state: null,
             millisecondsTimeOutInterval: Timeout.Infinite,
             executeOnlyOnce: false);
+
+        _sampleWait = ThreadPool.RegisterWaitForSingleObject(
+            _sampleSignal,
+            (_, _) => Dispatcher.BeginInvoke(SaveRequestedSample),
+            state: null,
+            millisecondsTimeOutInterval: Timeout.Infinite,
+            executeOnlyOnce: false);
+    }
+
+    /// <summary>En anden kopi af programmet har bedt om et prøvebillede af den lup der kører her.</summary>
+    private void SaveRequestedSample()
+    {
+        string? folder = SampleRequest.Take();
+        if (folder is not null) _shell?.SaveDiagnosticImages(folder);
     }
 
     private static string? SampleFolder(IEnumerable<string> args)
@@ -121,8 +149,10 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         _showPanelWait?.Unregister(null);
+        _sampleWait?.Unregister(null);
         _shell?.Dispose();
         _showPanelSignal?.Dispose();
+        _sampleSignal?.Dispose();
 
         if (_instanceLock is not null)
         {

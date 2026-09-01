@@ -51,6 +51,23 @@ Udløserklikket holdes som standard tilbage, så browseren ikke også åbner en 
 tændes. Knappen kan sættes til at virke som et rigtigt forstørrelsesglas: tændt så længe den
 holdes nede.
 
+**Kanterne genrejses ved høj forstørrelse.** Et skærmbillede er pixels, og detaljer der aldrig
+blev optaget, kan ingen regnemetode finde frem. Men måden der forstørres på afgør om teksten
+kan læses. Almindelig udglatning gør bogstaverne slørede, og firkantforstørrelse laver
+trappetrin på alle kurver. Fra tre gange og opefter findes kantens placering ved udglatning —
+den er nøjagtig langt ned under en hel pixel — og dens stejlhed genrejses bagefter, så
+overgangen bliver lige så smal som på den oprindelige skærm.
+
+![Luppen ved ti gange forstørrelse](docs/billeder/luppen-10x.png)
+
+**Farvekanterne omkring bogstaver fjernes.** Windows tegner tekst med ClearType, hvor hver
+skærmpixels tre farvestriber tændes forskelligt for at placere en bogstavkant en tredjedel
+pixel ad gangen. På skærmens egen opløsning smelter striberne sammen for øjet. Forstørret ti
+gange bliver de i stedet til brede røde og blå bræmmer — ren støj oven i det man prøver at
+læse, og ekstra generende når farvesynet i forvejen er svækket. Farven jævnes derfor ud på
+tværs af striberne, mens lysstyrken bliver rørt, så kanten bliver liggende præcis hvor den var.
+En rigtig rød knap beholder sin farve, for dens farve er den samme over mange pixels i træk.
+
 **Markøren tegnes selv.** Musepilen kommer ikke med i en skærmkopi. Luppen tegner derfor et
 kryds og en ring dér hvor musen står — med en åbning i midten.
 
@@ -67,6 +84,23 @@ skydeknapper, som er svære både at ramme og at aflæse.
 
 ![Kontrolpanelet](docs/billeder/kontrolpanel.png)
 
+## Hvad en lup ikke kan
+
+Luppen forstørrer et billede af skærmen. Ved ti gange forstørrelse er der kun én hundrededel
+så mange rigtige pixels bag hver tomme af det man ser, og de detaljer der aldrig blev optaget,
+kan ingen regnemetode finde frem. Kanterne kan gøres skarpe igen — og det gør programmet — men
+tegner et program sin tekst med små bogstaver, bliver den forstørrede tekst aldrig lige så fin
+som den samme tekst tegnet stor fra begyndelsen.
+
+Derfor er det bedste råd til den der har brug for meget forstørrelse at gøre begge dele:
+
+1. Sæt Windows til at tegne alting større: **Indstillinger → System → Skærm → Skalering**,
+   fx 150 % eller 175 %. Nu tegnes bogstaverne stort fra begyndelsen, med rigtige skrifttyper
+   og fuld skarphed.
+2. I browseren og andre programmer: **Ctrl og plus** gør siden større på samme måde.
+3. Brug så luppen til resten. Fire eller fem gange oven i en skærm der allerede er skaleret op,
+   giver et markant skarpere billede end femten gange på en uskaleret skærm.
+
 ## Sådan er det bygget
 
 ```
@@ -78,14 +112,23 @@ Skaermlup.Desktop  ──►  Skaermlup.Core
 |---|---|
 | `src/Skaermlup.Core` | Geometri, forstørrelsestrin, farvefiltre, museudløser, indstillinger, alle tekster. Ingen afhængigheder — derfor testbart. |
 | `src/Skaermlup.Desktop` | WPF-vinduer, skærmkopiering, globale muse- og tastaturlyttere. |
-| `tests/Skaermlup.Tests` | 72 enhedstests af kernen. |
+| `tests/Skaermlup.Tests` | 88 enhedstests af kernen. |
 
 ### Sådan vises billedet
 
 1. `BitBlt` fra skærmens DC ned i en genbrugt DIB-buffer (ingen allokering pr. billede).
-2. `ColorPipeline` kopierer bufferen over i visningen og farvebehandler undervejs med
-   færdigberegnede opslagstabeller.
-3. Grafikkortet skalerer det lille udsnit op via `Image.Stretch="Fill"`.
+2. `ColorPipeline` farvebehandler udsnittet med færdigberegnede opslagstabeller.
+3. Under tre gange forstørrelse sendes det lille udsnit direkte til grafikkortet, som skalerer
+   det op via `Image.Stretch="Fill"`. Det er billigst, og udglatningen kan ikke ses endnu.
+4. Fra tre gange og opefter fjernes ClearType-farvekanterne først, og `EdgeUpscaler` regner
+   billedet ud i fuld størrelse med kantstyret forstørrelse. Så er der ingen opskalering
+   tilbage til grafikkortet, og kanterne står skarpe.
+
+`EdgeUpscaler` er skrevet for at kunne følge med tres gange i sekundet: yderpunkterne i hver
+pixels omegn findes én gang pr. billede, kolonneopslaget regnes én gang pr. billede i stedet
+for en halv million gange, ensfarvede flader kopieres uden at blive blandet, og arbejdet deles
+i nogle få brede bånd — ikke én opgave pr. billedrække, for da koster planlægningen mere end
+regnearbejdet. Målt: 1,6 ms pr. billede ved 921x432 pixels.
 
 Lupvinduet er sat til `WDA_EXCLUDEFROMCAPTURE`, så det ikke kan se sig selv — ellers ville
 luppen forstørre sit eget billede i en uendelig tunnel. Kan Windows ikke det (ældre udgaver),
@@ -98,11 +141,13 @@ med skalering.
 
 ### Belastning
 
-Målt på en Windows 11-maskine med Release-byggeriet: cirka **3 % af én processorkerne** når
-musen står stille og **8 % når den bevæger sig**. Luppen kører 60 billeder i sekundet når musen
-flytter sig, og skruer selv ned til 20 når den står stille. "Rolig tilstand" i kontrolpanelet
-halverer det yderligere.
+Målt på en Windows 11-maskine med Release-byggeriet, ved fire gange forstørrelse: cirka **3 %
+af én processorkerne** når musen står stille og **8 % når den bevæger sig**. Ved ti gange, hvor
+den kantstyrede forstørrelse er i brug, er det **11 %** i ro og **29 %** i bevægelse.
 
+Luppen kører 60 billeder i sekundet når musen flytter sig, og skruer selv ned til 20 når den
+står stille — det er derfor tallene i ro er så meget lavere. "Rolig tilstand" i kontrolpanelet
+halverer det yderligere.
 ## Byg og kør
 
 ```bash
@@ -138,8 +183,11 @@ kan den tegne sig selv:
 Skaermlup.exe --proevebillede=C:\Temp\lup
 ```
 
-Programmet starter, gemmer et billede af luppen, vejledningsbjælken, kontrolpanelet og
-vejledningen i mappen, og lukker igen. Det er sådan billederne øverst i denne fil er lavet.
+Kører luppen ikke i forvejen, starter den, gemmer billederne og lukker igen. Kører den
+allerede — hvilket den gør hos enhver der faktisk bruger programmet — sendes beskeden videre
+til den kopi der har luppen, som gemmer billederne og bliver kørende. Gemt bliver et billede
+af luppen, vejledningsbjælken, kontrolpanelet og vejledningen. Det er sådan billederne
+øverst i denne fil er lavet.
 
 `Skaermlup.exe --start` starter med luppen tændt og uden at åbne kontrolpanelet. Det er den
 genvej "Start sammen med Windows" bruger.
