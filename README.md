@@ -69,9 +69,8 @@ tværs af striberne, mens lysstyrken bliver rørt, så kanten bliver liggende pr
 En rigtig rød knap beholder sin farve, for dens farve er den samme over mange pixels i træk.
 
 **Musen virker som den plejer.** Luppen ligger oven på skærmen, men klik går igennem den:
-markøren kan sættes i teksten, filer kan åbnes, knapper kan trykkes. Det kræver både
-`WS_EX_TRANSPARENT` og at vinduet er lagdelt — med kun det første sender Windows klikket til
-luppen i stedet, og det forsvinder.
+markøren kan sættes i teksten, filer kan åbnes, knapper kan trykkes. Det sker gennem et lille
+hul i vinduet netop dér hvor musen står — se afsnittet om hvordan det er bygget.
 
 **Markøren tegnes selv, og den må ikke være i vejen.** Musepilen kommer ikke med i en
 skærmkopi, så luppen tegner selv en markering. Den kan vælges efter hvad man er i gang med:
@@ -131,7 +130,7 @@ Skaermlup.Desktop  ──►  Skaermlup.Core
 |---|---|
 | `src/Skaermlup.Core` | Geometri, forstørrelsestrin, farvefiltre, museudløser, indstillinger, alle tekster. Ingen afhængigheder — derfor testbart. |
 | `src/Skaermlup.Desktop` | WPF-vinduer, skærmkopiering, globale muse- og tastaturlyttere. |
-| `tests/Skaermlup.Tests` | 102 enhedstests af kernen. |
+| `tests/Skaermlup.Tests` | 108 enhedstests af kernen. |
 
 ### Sådan vises billedet
 
@@ -149,6 +148,24 @@ for en halv million gange, ensfarvede flader kopieres uden at blive blandet, og 
 i nogle få brede bånd — ikke én opgave pr. billedrække, for da koster planlægningen mere end
 regnearbejdet. Målt: 1,6 ms pr. billede ved 921x432 pixels.
 
+### Klik gennem luppen
+
+Windows sender kun klik videre til programmet nedenunder, hvis lupvinduet enten er lagdelt
+eller har et hul netop dér hvor musen står. Lagdelte vinduer tegnes uden om grafikkortet, og
+på en stor lup giver det både flimmer og tre gange så meget processorarbejde — det er målt.
+Derfor bruges hullet: syv pixels i radius, altid præcis under musen, og skjult af musepilen
+som Windows selv tegner ovenpå.
+
+At det skal være enten-eller er ikke til at gætte sig til. `WS_EX_TRANSPARENT` alene er ikke
+nok; klikket lander stadig på luppen. `WM_NCHITTEST` besvaret med `HTTRANSPARENT` hjælper
+heller ikke — det svar sender kun videre til vinduer i samme tråd, ikke til andre programmer.
+Og `WS_EX_LAYERED` kan ikke sættes udefra på et WPF-vindue: WPF ejer den typografi og fjerner
+den igen med det samme.
+
+Luppen lægges desuden sådan at den forstørrede udgave af pixlen under musen havner nøjagtigt
+under musepilen. Uden det peger pilen ved siden af det den ligger på, og fejlen vokser med
+forstørrelsen — ved ti gange er en halv kildepixel allerede fem pixels på skærmen.
+
 Lupvinduet er sat til `WDA_EXCLUDEFROMCAPTURE`, så det ikke kan se sig selv — ellers ville
 luppen forstørre sit eget billede i en uendelig tunnel. Kan Windows ikke det (ældre udgaver),
 siger kontrolpanelet det og anbefaler læsebåndet, hvor kilden pr. konstruktion ligger uden for
@@ -160,13 +177,12 @@ med skalering.
 
 ### Belastning
 
-Målt på en Windows 11-maskine med Release-byggeriet, ved fire gange forstørrelse: cirka **3 %
-af én processorkerne** når musen står stille og **8 % når den bevæger sig**. Ved ti gange, hvor
-den kantstyrede forstørrelse er i brug, er det **11 %** i ro og **29 %** i bevægelse.
+Målt på en Windows 11-maskine med Release-byggeriet, ved 60 billeder i sekundet: cirka **6 %
+af én processorkerne** ved fire gange forstørrelse og **5 %** ved ti gange. Med musen i ro
+falder det yderligere, fordi luppen selv skruer ned til 20 billeder i sekundet.
 
-Luppen kører 60 billeder i sekundet når musen flytter sig, og skruer selv ned til 20 når den
-står stille — det er derfor tallene i ro er så meget lavere. "Rolig tilstand" i kontrolpanelet
-halverer det yderligere.
+"Rolig tilstand" i kontrolpanelet halverer det yderligere.
+
 ## Byg og kør
 
 ```bash

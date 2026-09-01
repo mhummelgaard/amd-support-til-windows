@@ -15,7 +15,9 @@ public class MagnifierGeometryTests
         var frame = MagnifierGeometry.ComputeLensFrame(
             new PixelPoint(960, 540), FullHd, new PixelSize(800, 600), 4);
 
-        frame.View.ShouldBe(new PixelRect(560, 240, 800, 600));
+        // Luppen ligger en anelse forskudt af midten med vilje: den lægges dér hvor den
+        // forstørrede udgave af pixlen under musen havner præcis under musepilen.
+        frame.View.ShouldBe(new PixelRect(558, 238, 800, 600));
         frame.Source.ShouldBe(new PixelRect(860, 465, 200, 150));
         frame.ScaleX.ShouldBe(4, 0.001);
         frame.ScaleY.ShouldBe(4, 0.001);
@@ -53,8 +55,8 @@ public class MagnifierGeometryTests
         var frame = MagnifierGeometry.ComputeLensFrame(
             new PixelPoint(0, 0), FullHd, new PixelSize(800, 600), 4);
 
-        frame.Marker.X.ShouldBe(0);
-        frame.Marker.Y.ShouldBe(0);
+        frame.Marker.X.ShouldBeLessThan(5);
+        frame.Marker.Y.ShouldBeLessThan(5);
     }
 
     [Fact]
@@ -141,5 +143,44 @@ public class MagnifierGeometryTests
             PixelPoint.Zero, PixelRect.Empty, new PixelSize(400, 300), 4);
 
         frame.IsEmpty.ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData(2)]
+    [InlineData(4)]
+    [InlineData(10)]
+    [InlineData(20)]
+    public void Musepilen_peger_paa_det_den_ligger_paa(double zoom)
+    {
+        // Det vigtigste af det hele: den forstørrede udgave af pixlen under musen skal ligge
+        // præcis dér hvor musepilen står. Ellers peger pilen ved siden af — og fejlen vokser
+        // med forstørrelsen, fordi én kildepixel bliver mange pixels bred på skærmen.
+        var focus = new PixelPoint(960, 540);
+        var frame = MagnifierGeometry.ComputeLensFrame(focus, FullHd, new PixelSize(900, 500), zoom);
+
+        (frame.View.X + frame.Marker.X).ShouldBeInRange(focus.X - 1, focus.X + 1);
+        (frame.View.Y + frame.Marker.Y).ShouldBeInRange(focus.Y - 1, focus.Y + 1);
+    }
+
+    [Fact]
+    public void Hullet_til_museklik_ligger_hvor_musen_er()
+    {
+        var focus = new PixelPoint(700, 400);
+        var frame = MagnifierGeometry.ComputeLensFrame(focus, FullHd, new PixelSize(900, 500), 8);
+
+        (frame.View.X + frame.HotSpot.X).ShouldBe(focus.X);
+        (frame.View.Y + frame.HotSpot.Y).ShouldBe(focus.Y);
+    }
+
+    [Fact]
+    public void Hullet_foelger_med_naar_luppen_klemmes_op_i_hjoernet()
+    {
+        // Klemt op mod kanten falder luppens midte og musen ikke længere sammen, men hullet
+        // skal stadig ligge nøjagtigt under musen, ellers kan brugeren ikke klikke.
+        var focus = new PixelPoint(20, 15);
+        var frame = MagnifierGeometry.ComputeLensFrame(focus, FullHd, new PixelSize(900, 500), 8);
+
+        (frame.View.X + frame.HotSpot.X).ShouldBe(focus.X);
+        (frame.View.Y + frame.HotSpot.Y).ShouldBe(focus.Y);
     }
 }

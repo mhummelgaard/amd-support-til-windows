@@ -4,7 +4,7 @@
         Title="Skærmlup — vejledning"
         WindowStyle="None"
         ResizeMode="NoResize"
-        AllowsTransparency="True"
+        AllowsTransparency="False"
         ShowInTaskbar="False"
         ShowActivated="False"
         Topmost="True"

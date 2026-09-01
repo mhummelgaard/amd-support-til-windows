@@ -14,7 +14,13 @@ namespace Skaermlup.Desktop.Views;
 /// <summary>Selve luppen: et gennemsigtigt-for-mus lag der viser det forstørrede skærmudsnit.</summary>
 public partial class LensWindow : Window
 {
-    private const double RingRadiusDip = 26;
+
+
+    /// <summary>
+    /// Hullets radius i pixels. Stort nok til at musen rammer det, selv når luppen er et par
+    /// billeder bagud under en hurtig bevægelse, og lille nok til at musepilen dækker det.
+    /// </summary>
+    private const int HoleRadius = 7;
 
     private readonly EdgeUpscaler _upscaler = new();
     private readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew();
@@ -31,6 +37,7 @@ public partial class LensWindow : Window
     private PixelRect _appliedBounds;
     private LensShape _appliedShape = (LensShape)(-1);
     private PixelSize _appliedShapeSize;
+    private PixelPoint _appliedHole = new(int.MinValue, int.MinValue);
     private BitmapScalingMode _appliedScaling = BitmapScalingMode.Unspecified;
     private double _appliedBorder = -1;
     private IntPtr _handle;
@@ -79,15 +86,36 @@ public partial class LensWindow : Window
     {
         if (frame.IsEmpty || capture.Width <= 0) return;
 
-        ApplyBounds(frame.View, settings);
+        // Billedet opdateres før vinduet flyttes. Omvendt ville luppen i et øjeblik vise
+        // det forrige billede på den nye plads, og det ses som et ryk.
         ApplyChrome(settings);
         WritePixels(frame, capture, map, settings);
         UpdateMarker(frame, capture, settings);
+        ApplyBounds(frame, settings);
     }
 
-    private void ApplyBounds(PixelRect view, AppSettings settings)
+    private void ApplyBounds(MagnifierFrame frame, AppSettings settings)
     {
+        var view = frame.View;
         bool moved = view != _appliedBounds;
+
+        var shape = settings.Mode == ViewMode.Dock ? LensShape.Rectangle : settings.Shape;
+        var hole = frame.HotSpot;
+
+        // Hullet flytter sig kun når luppen bliver klemt op mod en skærmkant. Ellers står
+        // musen altid det samme sted i vinduet, og formen skal ikke sættes igen.
+        if (shape != _appliedShape || view.Size != _appliedShapeSize || hole != _appliedHole)
+        {
+            if (settings.Mode == ViewMode.Dock)
+                OverlayWindows.ApplyBandShape(_handle, view.Width, view.Height, hole, HoleRadius);
+            else
+                OverlayWindows.ApplyShape(_handle, view.Width, view.Height, shape, 14, hole, HoleRadius);
+
+            _appliedShape = shape;
+            _appliedShapeSize = view.Size;
+            _appliedHole = hole;
+        }
+
         if (moved)
         {
             OverlayWindows.SetBounds(_handle, view, show: true);
@@ -100,36 +128,6 @@ public partial class LensWindow : Window
             OverlayWindows.Reassert(_handle);
             _framesSinceReassert = 0;
         }
-
-        var shape = settings.Mode == ViewMode.Dock ? LensShape.Rectangle : settings.Shape;
-        if (moved || shape != _appliedShape || view.Size != _appliedShapeSize)
-        {
-            ApplyClip(settings.Mode, shape, view.Size);
-            _appliedShape = shape;
-            _appliedShapeSize = view.Size;
-        }
-    }
-
-    /// <summary>
-    /// Klipper luppen til sin form. Det gøres i WPF frem for med en vinduesregion, fordi
-    /// vinduet nu tegnes med gennemsigtighed pr. pixel — så bliver kanten blød i stedet for
-    /// at ende som en trappe, og det er den samme kant brugeren ser hele vejen rundt.
-    /// </summary>
-    private void ApplyClip(ViewMode mode, LensShape shape, PixelSize size)
-    {
-        if (mode == ViewMode.Dock)
-        {
-            Root.Clip = null;
-            return;
-        }
-
-        double width = size.Width / GetDpiScaleX();
-        double height = size.Height / GetDpiScaleY();
-        var bounds = new Rect(0, 0, width, height);
-
-        Root.Clip = shape == LensShape.Circle
-            ? new EllipseGeometry(bounds)
-            : new RectangleGeometry(bounds, 10, 10);
     }
 
     private void ApplyChrome(AppSettings settings)

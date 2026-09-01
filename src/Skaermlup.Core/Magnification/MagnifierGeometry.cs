@@ -41,8 +41,20 @@ public static class MagnifierGeometry
         if (monitor.IsEmpty || lensSize.IsEmpty) return default;
 
         zoom = ZoomLadder.Clamp(zoom);
-        var view = PixelRect.CenteredOn(focus, lensSize).ClampInto(monitor);
         var source = SourceFor(focus, lensSize, zoom, monitor);
+        if (source.IsEmpty) return default;
+
+        // Luppen lægges så den forstørrede udgave af pixlen under musen havner præcis dér,
+        // hvor musepilen står. Ellers peger pilen ved siden af det den ligger på — og fejlen
+        // vokser med forstørrelsen, fordi én kildepixel bliver til mange på skærmen.
+        double offsetX = ((double)focus.X - source.X + 0.5) * lensSize.Width / source.Width;
+        double offsetY = ((double)focus.Y - source.Y + 0.5) * lensSize.Height / source.Height;
+
+        var view = new PixelRect(
+            (int)Math.Round(focus.X + 0.5 - offsetX),
+            (int)Math.Round(focus.Y + 0.5 - offsetY),
+            lensSize.Width, lensSize.Height).ClampInto(monitor);
+
         return Frame(source, view, focus);
     }
 
@@ -86,13 +98,17 @@ public static class MagnifierGeometry
         double sx = (double)view.Width / source.Width;
         double sy = (double)view.Height / source.Height;
 
+        // Der regnes fra midten af kildepixlen, ikke fra dens venstre kant. Ved høj
+        // forstørrelse er én kildepixel mange pixels bred på skærmen, og en halv pixels
+        // fejl her bliver til en synlig forskydning af markeringen.
+        //
         // Fokus kan ligge uden for kilden når musen står helt ude i en skærmkant. Markøren
         // klemmes derfor ind i visningen i stedet for at forsvinde ud over kanten.
-        int mx = (int)Math.Round((focus.X - source.X) * sx);
-        int my = (int)Math.Round((focus.Y - source.Y) * sy);
+        int mx = (int)Math.Round((focus.X - source.X + 0.5) * sx);
+        int my = (int)Math.Round((focus.Y - source.Y + 0.5) * sy);
         mx = Math.Clamp(mx, 0, view.Width);
         my = Math.Clamp(my, 0, view.Height);
 
-        return new MagnifierFrame(source, view, sx, sy, new PixelPoint(mx, my));
+        return new MagnifierFrame(source, view, sx, sy, new PixelPoint(mx, my), focus);
     }
 }

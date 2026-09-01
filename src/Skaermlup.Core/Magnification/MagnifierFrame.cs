@@ -13,7 +13,14 @@ public readonly record struct MagnifierFrame(
     PixelRect View,
     double ScaleX,
     double ScaleY,
-    PixelPoint Marker)
+    PixelPoint Marker,
+    PixelPoint Focus)
 {
     public bool IsEmpty => Source.IsEmpty || View.IsEmpty;
+
+    /// <summary>
+    /// Musens plads inde i lupvinduet, i skærmpixels fra vinduets øverste venstre hjørne.
+    /// Det er dér der skal være hul igennem, så klik rammer programmet nedenunder.
+    /// </summary>
+    public PixelPoint HotSpot => new(Focus.X - View.X, Focus.Y - View.Y);
 }

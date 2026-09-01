@@ -49,4 +49,69 @@ internal static class OverlayWindows
             NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE);
     }
 
+
+    /// <summary>
+    /// Klipper vinduet til sin form og laver et lille hul dér hvor musen står.
+    ///
+    /// Hullet er hele grunden til at man kan klikke gennem luppen. Windows sender kun klik
+    /// videre til programmet nedenunder, hvis vinduet enten er lagdelt eller har et hul netop
+    /// dér. Lagdelte vinduer tegnes uden om grafikkortet og flimrer på store flader, så det
+    /// er hullet der bruges. Det er få pixels stort og ligger under musepilen, som Windows
+    /// selv tegner ovenpå — så det ses ikke i praksis.
+    /// </summary>
+    public static void ApplyShape(
+        IntPtr hwnd, int width, int height, LensShape shape, int cornerRadius,
+        PixelPoint hole, int holeRadius)
+    {
+        if (hwnd == IntPtr.Zero || width <= 0 || height <= 0) return;
+
+        IntPtr region = shape == LensShape.Circle
+            ? NativeMethods.CreateEllipticRgn(0, 0, width + 1, height + 1)
+            : NativeMethods.CreateRoundRectRgn(0, 0, width + 1, height + 1,
+                Math.Max(1, cornerRadius * 2), Math.Max(1, cornerRadius * 2));
+
+        if (region == IntPtr.Zero) return;
+
+        if (holeRadius > 0)
+        {
+            var opening = NativeMethods.CreateEllipticRgn(
+                hole.X - holeRadius, hole.Y - holeRadius,
+                hole.X + holeRadius, hole.Y + holeRadius);
+
+            if (opening != IntPtr.Zero)
+            {
+                NativeMethods.CombineRgn(region, region, opening, NativeMethods.RGN_DIFF);
+                NativeMethods.DeleteObject(opening);
+            }
+        }
+
+        // Windows overtager regionen når kaldet lykkes, og frigiver den selv bagefter.
+        if (NativeMethods.SetWindowRgn(hwnd, region, true) == 0)
+            NativeMethods.DeleteObject(region);
+    }
+
+    /// <summary>Et helt rektangel med hul i, til læsebåndet der ikke har afrundede hjørner.</summary>
+    public static void ApplyBandShape(IntPtr hwnd, int width, int height, PixelPoint hole, int holeRadius)
+    {
+        if (hwnd == IntPtr.Zero || width <= 0 || height <= 0) return;
+
+        var region = NativeMethods.CreateRectRgn(0, 0, width + 1, height + 1);
+        if (region == IntPtr.Zero) return;
+
+        if (holeRadius > 0)
+        {
+            var opening = NativeMethods.CreateEllipticRgn(
+                hole.X - holeRadius, hole.Y - holeRadius,
+                hole.X + holeRadius, hole.Y + holeRadius);
+
+            if (opening != IntPtr.Zero)
+            {
+                NativeMethods.CombineRgn(region, region, opening, NativeMethods.RGN_DIFF);
+                NativeMethods.DeleteObject(opening);
+            }
+        }
+
+        if (NativeMethods.SetWindowRgn(hwnd, region, true) == 0)
+            NativeMethods.DeleteObject(region);
+    }
 }
