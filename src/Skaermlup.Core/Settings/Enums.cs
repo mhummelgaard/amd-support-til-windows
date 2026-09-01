@@ -36,7 +36,10 @@ public enum MarkerStyle
     /// <summary>Kun en ring. Dækker mindst muligt.</summary>
     Ring = 2,
 
-    /// <summary>Ingen markering.</summary>
+    /// <summary>
+    /// Ingen egen markering — Windows egen musepil bliver stående og bruges i stedet.
+    /// I alle de andre tilstande skjules pilen, så der ikke er to markører på skærmen.
+    /// </summary>
     None = 3,
 }
 

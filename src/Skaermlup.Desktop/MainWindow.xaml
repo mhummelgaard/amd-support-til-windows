@@ -265,7 +265,7 @@
                     <StackPanel>
                         <TextBlock Style="{StaticResource H2}" Text="Sådan vises det sted musen peger"/>
                         <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,12"
-                                   Text="Musepilen kommer ikke med i det forstørrede billede, så luppen tegner selv en markering. Den er sort på lys baggrund og hvid på mørk, så den altid kan ses."/>
+                                   Text="Musepilen kommer ikke med i det forstørrede billede, så luppen tegner selv en markering. Den er sort på lys baggrund og hvid på mørk, så den altid kan ses. Windows egen musepil skjules imens, så der ikke er to markører på skærmen."/>
 
                         <RadioButton GroupName="Markering" IsChecked="{Binding MarkerIsCrosshair, Mode=TwoWay}"
                                      Style="{StaticResource ChoiceTile}">
@@ -299,8 +299,12 @@
 
                         <RadioButton GroupName="Markering" IsChecked="{Binding MarkerIsNone, Mode=TwoWay}"
                                      Style="{StaticResource ChoiceTile}">
-                            <TextBlock Text="Ingen markering" FontSize="21" FontWeight="Bold"
-                                       Foreground="{StaticResource Ink}"/>
+                            <StackPanel>
+                                <TextBlock Text="Brug musens egen pil" FontSize="21" FontWeight="Bold"
+                                           Foreground="{StaticResource Ink}"/>
+                                <TextBlock Text="Luppen tegner ingenting. Windows egen musepil bliver stående — men den peger skævt når luppen er klemt op mod en skærmkant."
+                                           FontSize="18" Foreground="{StaticResource InkMuted}" TextWrapping="Wrap"/>
+                            </StackPanel>
                         </RadioButton>
 
                         <StackPanel Orientation="Horizontal" Margin="0,14,0,0">

@@ -81,7 +81,13 @@ skærmkopi, så luppen tegner selv en markering. Den kan vælges efter hvad man 
   stille, skal krydset pege så præcist som muligt.
 - **Streg under linjen.** Den vandrette streg lægger sig under tekstlinjen i stedet for hen
   over den. Beregnet til at skrive med.
-- **Kun en ring**, eller ingen markering.
+- **Kun en ring.** Ingen streger, dækker mindst muligt.
+- **Brug musens egen pil.** Luppen tegner ingenting.
+
+Windows egen musepil skjules mens luppen tegner sin egen markering. To markører oven i hinanden
+er forvirrende, og systemets pil tegnes i skærmens egen opløsning og peger skævt når luppen er
+klemt op mod en skærmkant — luppens markering regnes ud fra den faktiske afbildning og passer
+altid. Vælger man "brug musens egen pil", bliver pilen naturligvis stående.
 
 ![Streg under linjen](docs/billeder/markering-understregning.png)
 
@@ -147,6 +153,20 @@ pixels omegn findes én gang pr. billede, kolonneopslaget regnes én gang pr. bi
 for en halv million gange, ensfarvede flader kopieres uden at blive blandet, og arbejdet deles
 i nogle få brede bånd — ikke én opgave pr. billedrække, for da koster planlægningen mere end
 regnearbejdet. Målt: 1,6 ms pr. billede ved 921x432 pixels.
+
+### Musepilen
+
+Der er ingen pæn måde at skjule Windows egen musepil på. `MagShowSystemCursor` fra
+Magnification-API'et svarer at det gik godt, men gør intet uden Windows egen
+forstørrelsesmotor bagved, og `ShowCursor` gælder kun ens eget vindue. Tilbage er
+`SetSystemCursor`, som skriver systemets markører om for hele maskinen og bliver stående, hvis
+programmet ikke får ryddet op efter sig.
+
+Derfor tre sikkerhedsnet: pilen skjules kun mens luppen faktisk er tændt, den hentes frem igen
+ad alle veje ud af programmet, og der ligger en lille fil i datamappen imens. Findes den fil
+ved næste opstart, er programmet gået ned med pilen skjult, og markørerne sættes på plads med
+det samme. Efterprøvet ved at slå luppen til og fra, og ved at dræbe programmet med pilen
+skjult og starte det igen.
 
 ### Klik gennem luppen
 

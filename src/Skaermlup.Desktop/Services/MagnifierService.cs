@@ -21,6 +21,7 @@ internal sealed class MagnifierService : IDisposable
 
     private readonly AppSettings _settings;
     private readonly ScreenCapture _capture = new();
+    private readonly SystemCursor _cursor = new();
     private readonly DispatcherTimer _timer = new(DispatcherPriority.Render);
 
     private FollowResolver _follow = new();
@@ -83,6 +84,7 @@ internal sealed class MagnifierService : IDisposable
         _lens.EnsureClickThrough();
 
         IsActive = true;
+        UpdateSystemCursor();
 
         _timer.Start();
 
@@ -97,6 +99,7 @@ internal sealed class MagnifierService : IDisposable
         _timer.Stop();
         IsActive = false;
         _lens?.Hide();
+        _cursor.Show();
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
@@ -104,6 +107,7 @@ internal sealed class MagnifierService : IDisposable
     public void ApplySettings()
     {
         RebuildColorMap();
+        UpdateSystemCursor();
         _follow.FollowCaret = _settings.FollowCaret;
         if (IsActive) RenderOnce();
         Changed?.Invoke(this, EventArgs.Empty);
@@ -165,6 +169,18 @@ internal sealed class MagnifierService : IDisposable
         RenderOnce();
     }
 
+    /// <summary>
+    /// Windows egen musepil skjules mens luppen tegner sin egen markering. To markører oven i
+    /// hinanden er forvirrende, og systemets pil peger forkert når luppen er klemt op mod en
+    /// skærmkant. Vælger brugeren "ingen markering", er det netop pilen der skal bruges, og
+    /// så bliver den stående.
+    /// </summary>
+    private void UpdateSystemCursor()
+    {
+        if (IsActive && _settings.Marker != MarkerStyle.None) _cursor.Hide();
+        else _cursor.Show();
+    }
+
     private void RebuildColorMap()
         => _colorMap = ColorMap.Build(_settings.Colors, _settings.Contrast, _settings.Brightness);
 
@@ -220,5 +236,6 @@ internal sealed class MagnifierService : IDisposable
         _lens?.Close();
         _lens = null;
         _capture.Dispose();
+        _cursor.Dispose();
     }
 }

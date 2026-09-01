@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Markup;
 using System.Windows.Threading;
 using Skaermlup.Core.Settings;
+using Skaermlup.Desktop.Interop;
 using Skaermlup.Desktop.Services;
 
 namespace Skaermlup.Desktop;
@@ -48,11 +49,18 @@ public partial class App : Application
             return;
         }
 
+        // Gik programmet sidst ned mens musepilen var skjult, sættes markørerne på plads nu.
+        SystemCursor.RestoreIfLeftHidden();
+
         UseDanish();
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
         base.OnStartup(e);
 
         DispatcherUnhandledException += OnUnhandledException;
+
+        // Sidste udvej: går programmet ned ad en anden vej end den normale, skal musepilen
+        // stadig komme tilbage. En bruger må aldrig efterlades uden nogen musepil.
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => _shell?.Dispose();
 
         var store = new SettingsStore(SettingsStore.DefaultPath);
         _shell = new AppShell(store, store.Load());
