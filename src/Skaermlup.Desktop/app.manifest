@@ -2,6 +2,18 @@
 <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
   <assemblyIdentity version="1.0.0.0" name="Skaermlup"/>
 
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">
+    <security>
+      <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">
+        <!-- uiAccess="true" ville lade luppen ligge oven på Start-menuen og resten af
+             Windows' egen skal. Det kræver at programmet er kodesigneret og installeret
+             under Programmer, og starter slet ikke uden. Det bygges derfor kun til
+             signerede udgivelser: se app.uiaccess.manifest og README. -->
+        <requestedExecutionLevel level="asInvoker" uiAccess="false"/>
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+
   <application xmlns="urn:schemas-microsoft-com:asm.v3">
     <windowsSettings>
       <!-- Luppen regner i rigtige skærmpixels. Uden fuld DPI-forståelse ville Windows

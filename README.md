@@ -168,6 +168,30 @@ ved næste opstart, er programmet gået ned med pilen skjult, og markørerne sæ
 det samme. Efterprøvet ved at slå luppen til og fra, og ved at dræbe programmet med pilen
 skjult og starte det igen.
 
+### Oven på Start-menuen
+
+Windows lægger sin egen skal — Start-menuen, opgavevisningen, meddelelsescenteret og
+lydknappen — i et højere lag end almindelige programmer kan nå. Et program kan sætte sit
+vindue øverst, men ikke øverst nok. Luppen forsvinder derfor ind bag dem.
+
+Det kan kun løses ved at bede om `uiAccess` i programmets manifest, og det tillader Windows
+kun hvis programmet er **kodesigneret** og ligger under **Programmer**. Det er præcis den vej
+Windows eget forstørrelsesglas og de kommercielle skærmlæsere går. Uden signatur nægter
+Windows at starte et uiAccess-program overhovedet, så de to ting hænger uløseligt sammen.
+
+Derfor bygges det kun når der er et certifikat:
+
+```bash
+pwsh installer/build-installer.ps1 -CertificateThumbprint <aftryk>
+```
+
+Uden `-CertificateThumbprint` bygges den almindelige udgave, som går ind bag Start-menuen.
+Har man ikke et rigtigt certifikat, kan man lave et til sin egen maskine med
+`installer/opret-selvsigneret-certifikat.ps1` — læs advarslen i toppen af scriptet først, for
+det lægger et rodcertifikat ind i maskinens betroede liste. Skal programmet deles med andre,
+er det et rigtigt certifikat fra en udsteder der skal bruges; så slipper modtagerne også for
+SmartScreen-advarslen.
+
 ### Klik gennem luppen
 
 Windows sender kun klik videre til programmet nedenunder, hvis lupvinduet enten er lagdelt

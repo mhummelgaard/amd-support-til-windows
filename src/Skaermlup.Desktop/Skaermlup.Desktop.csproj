@@ -8,7 +8,9 @@
     <UseWPF>true</UseWPF>
     <!-- Skærmbilledet kopieres direkte fra en DIB-buffer over i visningen. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Byg med -p:UiAccess=true for en signeret udgave der maa ligge oven paa Start-menuen. -->
+    <ApplicationManifest Condition="'$(UiAccess)' == 'true'">app.uiaccess.manifest</ApplicationManifest>
+    <ApplicationManifest Condition="'$(UiAccess)' != 'true'">app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\skaermlup.ico</ApplicationIcon>
     <RootNamespace>Skaermlup.Desktop</RootNamespace>
     <AssemblyName>Skaermlup</AssemblyName>
