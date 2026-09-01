@@ -1,0 +1,9 @@
+﻿# Ensartede linjeskift: LF i repoet, så diffs bliver ens på tværs af maskiner.
+* text=auto eol=lf
+
+# Binære filer — må aldrig normaliseres.
+*.png binary
+*.jpg binary
+*.ico binary
+*.exe binary
+*.dll binary

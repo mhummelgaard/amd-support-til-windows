@@ -1,0 +1,9 @@
+﻿<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Skaermlup.Core/Skaermlup.Core.csproj" />
+    <Project Path="src/Skaermlup.Desktop/Skaermlup.Desktop.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Skaermlup.Tests/Skaermlup.Tests.csproj" />
+  </Folder>
+</Solution>

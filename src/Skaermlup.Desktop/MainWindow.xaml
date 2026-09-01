@@ -1,0 +1,318 @@
+﻿<Window x:Class="Skaermlup.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:Skaermlup.Desktop"
+        Style="{StaticResource AmdWindow}"
+        Title="Skærmlup — indstillinger"
+        Height="900" Width="1080" MinHeight="600" MinWidth="820"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <local:BoolToVisibilityConverter x:Key="Vis"/>
+    </Window.Resources>
+
+    <Window.InputBindings>
+        <KeyBinding Key="F1" Command="{Binding ShowHelpCommand}"/>
+    </Window.InputBindings>
+
+    <DockPanel>
+
+        <!-- Hovedet: navnet står stort, så vinduet kan kendes fra andre vinduer -->
+        <Border DockPanel.Dock="Top" Background="{StaticResource Primary}" Padding="22,14">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="/Assets/skaermlup.ico" Width="46" Height="46"
+                       RenderOptions.BitmapScalingMode="HighQuality" VerticalAlignment="Center"/>
+                <StackPanel Margin="16,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Style="{StaticResource H1}" Text="Skærmlup"/>
+                    <TextBlock Text="Forstørrelsesglas til skærmen" FontSize="19" Foreground="#D6E4E1"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Bunden: de tre knapper der ikke hører til en enkelt indstilling -->
+        <Border DockPanel.Dock="Bottom" Background="{StaticResource Surface}"
+                BorderBrush="{StaticResource Line}" BorderThickness="0,2,0,0" Padding="22,14">
+            <DockPanel>
+                <Button DockPanel.Dock="Left" Style="{StaticResource PrimaryButton}"
+                        Content="Vis hele vejledningen (F1)" Command="{Binding ShowHelpCommand}"/>
+                <Button DockPanel.Dock="Right" Style="{StaticResource DangerButton}"
+                        Content="Afslut programmet" Command="{Binding ExitCommand}" Margin="14,0,0,0"/>
+                <Button DockPanel.Dock="Right" Content="Nulstil til standard"
+                        Command="{Binding ResetToDefaultsCommand}" HorizontalAlignment="Right"/>
+                <TextBlock/>
+            </DockPanel>
+        </Border>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0" Focusable="False">
+            <StackPanel Margin="24,20,24,24">
+
+                <!-- ============ Tænd og sluk ============ -->
+                <Border Style="{StaticResource Card}" Background="{StaticResource Surface}">
+                    <StackPanel>
+                        <Button Style="{StaticResource GiantButton}" Content="{Binding PowerLabel}"
+                                Command="{Binding TogglePowerCommand}"/>
+                        <TextBlock Style="{StaticResource H2}" Text="{Binding StatusHeadline}" Margin="0,16,0,4"/>
+                        <TextBlock Style="{StaticResource Body}" Text="{Binding StatusDetail}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ Advarsler ============ -->
+                <Border Style="{StaticResource Card}" Background="{StaticResource DangerSoft}"
+                        BorderBrush="{StaticResource Danger}"
+                        Visibility="{Binding ShowMouseWarning, Converter={StaticResource Vis}}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource H2}" Foreground="{StaticResource Danger}"
+                                   Text="Museknappen virker ikke"/>
+                        <TextBlock Style="{StaticResource Body}"
+                                   Text="Windows ville ikke lade programmet lytte på musen. Brug tastaturgenvejen Ctrl + Alt + L i stedet, eller start programmet forfra."/>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Background="{StaticResource WarningBg}"
+                        BorderBrush="{StaticResource AccentDark}"
+                        Visibility="{Binding ShowCaptureWarning, Converter={StaticResource Vis}}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource H2}" Foreground="{StaticResource AccentDark}"
+                                   Text="Brug læsebåndet på denne computer"/>
+                        <TextBlock Style="{StaticResource Body}"
+                                   Text="Denne udgave af Windows kan ikke skjule luppen for sig selv. Vælg visningen Læsebånd nedenfor — så kommer luppen ikke til at forstørre sit eget billede."/>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Background="{StaticResource WarningBg}"
+                        BorderBrush="{StaticResource AccentDark}"
+                        Visibility="{Binding ShowShortcutWarning, Converter={StaticResource Vis}}">
+                    <TextBlock Style="{StaticResource Body}" Text="{Binding ShortcutWarningText}"/>
+                </Border>
+
+                <!-- ============ Kom godt i gang ============ -->
+                <Border Style="{StaticResource Card}" Background="#FFF9E9" BorderBrush="{StaticResource Accent}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource H2}" Text="Sådan kommer du i gang"/>
+                        <ItemsControl ItemsSource="{Binding GettingStarted}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" FontSize="22" Margin="0,0,0,10"
+                                               TextWrapping="Wrap" LineHeight="32"
+                                               Foreground="{StaticResource Ink}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Style="{StaticResource Hint}" Margin="0,8,0,0"
+                                   Text="Luk-knappen (X) lukker kun dette vindue. Luppen kører videre, og Ctrl + Alt + S åbner vinduet igen."/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ Forstørrelse ============ -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource H2}" Text="Hvor meget skal der forstørres?"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Button Style="{StaticResource StepButton}" Content="−"
+                                    Command="{Binding ZoomOutCommand}"
+                                    ToolTip="Forstør mindre"/>
+                            <Border Width="150" Height="72" Margin="14,0" CornerRadius="8"
+                                    Background="{StaticResource SurfaceAlt}"
+                                    BorderBrush="{StaticResource Line}" BorderThickness="2">
+                                <TextBlock Style="{StaticResource Readout}" Text="{Binding ZoomText}"/>
+                            </Border>
+                            <Button Style="{StaticResource StepButton}" Content="+"
+                                    Command="{Binding ZoomInCommand}"
+                                    ToolTip="Forstør mere"/>
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource Hint}" Margin="0,12,0,0"
+                                   Text="Du kan også holde Ctrl nede og rulle på musehjulet."/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ Størrelse ============ -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource H2}" Text="Hvor stort skal området være?"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Button Style="{StaticResource StepButton}" Content="−"
+                                    Command="{Binding SizeDownCommand}"/>
+                            <Border Width="150" Height="72" Margin="14,0" CornerRadius="8"
+                                    Background="{StaticResource SurfaceAlt}"
+                                    BorderBrush="{StaticResource Line}" BorderThickness="2">
+                                <TextBlock Style="{StaticResource Readout}" Text="{Binding SizeText}"/>
+                            </Border>
+                            <Button Style="{StaticResource StepButton}" Content="+"
+                                    Command="{Binding SizeUpCommand}"/>
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource Hint}" Margin="0,12,0,0"
+                                   Text="{Binding SizeCaption}"/>
+                        <TextBlock Style="{StaticResource Hint}"
+                                   Text="Du kan også holde Skift nede og rulle på musehjulet."/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ Visning ============ -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource H2}" Text="Hvordan skal det forstørrede vises?"/>
+                        <RadioButton GroupName="Visning" IsChecked="{Binding IsLensMode, Mode=TwoWay}"
+                                     Content="Lup — følger musen som et forstørrelsesglas"/>
+                        <RadioButton GroupName="Visning" IsChecked="{Binding IsDockMode, Mode=TwoWay}"
+                                     Content="Læsebånd — en bred stribe langs skærmkanten"/>
+
+                        <TextBlock Style="{StaticResource H2}" Margin="0,20,0,6" Text="Luppens form"/>
+                        <RadioButton GroupName="Form" IsChecked="{Binding IsRectangle, Mode=TwoWay}"
+                                     Content="Firkantet"/>
+                        <RadioButton GroupName="Form" IsChecked="{Binding IsCircle, Mode=TwoWay}"
+                                     Content="Rund"/>
+
+                        <TextBlock Style="{StaticResource H2}" Margin="0,20,0,6" Text="Læsebåndets plads"/>
+                        <RadioButton GroupName="Baand" IsChecked="{Binding DockAtTop, Mode=TwoWay}"
+                                     Content="Øverst på skærmen"/>
+                        <RadioButton GroupName="Baand" IsChecked="{Binding DockAtBottom, Mode=TwoWay}"
+                                     Content="Nederst på skærmen"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ Farver ============ -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource H2}" Text="Farver i luppen"/>
+                        <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,12"
+                                   Text="Mange med AMD læser lettest med omvendte farver eller gul på sort. Prøv dig frem — Ctrl + Alt + K skifter hurtigt mellem dem."/>
+                        <ItemsControl ItemsSource="{Binding ColorOptions}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <RadioButton GroupName="Farver" Style="{StaticResource ChoiceTile}"
+                                                 IsChecked="{Binding IsSelected, Mode=TwoWay}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Name}" FontSize="21" FontWeight="Bold"
+                                                       Foreground="{StaticResource Ink}"/>
+                                            <TextBlock Text="{Binding Description}" FontSize="18"
+                                                       Foreground="{StaticResource InkMuted}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </RadioButton>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Style="{StaticResource H2}" Margin="0,20,0,10" Text="Kontrast og lysstyrke"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <TextBlock Style="{StaticResource Body}" Text="Kontrast" Width="180"
+                                       VerticalAlignment="Center"/>
+                            <Button Style="{StaticResource StepButton}" Content="−" Command="{Binding ContrastDownCommand}"/>
+                            <Border Width="120" Height="72" Margin="12,0" CornerRadius="8"
+                                    Background="{StaticResource SurfaceAlt}"
+                                    BorderBrush="{StaticResource Line}" BorderThickness="2">
+                                <TextBlock Style="{StaticResource Readout}" Text="{Binding ContrastText}"/>
+                            </Border>
+                            <Button Style="{StaticResource StepButton}" Content="+" Command="{Binding ContrastUpCommand}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Body}" Text="Lysstyrke" Width="180"
+                                       VerticalAlignment="Center"/>
+                            <Button Style="{StaticResource StepButton}" Content="−" Command="{Binding BrightnessDownCommand}"/>
+                            <Border Width="120" Height="72" Margin="12,0" CornerRadius="8"
+                                    Background="{StaticResource SurfaceAlt}"
+                                    BorderBrush="{StaticResource Line}" BorderThickness="2">
+                                <TextBlock Style="{StaticResource Readout}" Text="{Binding BrightnessText}"/>
+                            </Border>
+                            <Button Style="{StaticResource StepButton}" Content="+" Command="{Binding BrightnessUpCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ Museknapper ============ -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource H2}" Text="Hvilken museknap tænder luppen?"/>
+                        <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,10"
+                                   Text="Vælg en knap du ikke bruger til andet. Så er luppen altid ét tryk væk — uden at du skal finde noget på skærmen."/>
+                        <CheckBox IsChecked="{Binding TriggerMiddle, Mode=TwoWay}"
+                                  Content="Midterste museknap — tryk hjulet ned som en knap"/>
+                        <CheckBox IsChecked="{Binding TriggerSideBack, Mode=TwoWay}"
+                                  Content="Bageste sideknap under tommelfingeren"/>
+                        <CheckBox IsChecked="{Binding TriggerSideForward, Mode=TwoWay}"
+                                  Content="Forreste sideknap under tommelfingeren"/>
+                        <CheckBox IsChecked="{Binding TriggerChord, Mode=TwoWay}"
+                                  Content="Venstre og højre knap samtidig — til mus uden ekstra knapper"/>
+
+                        <TextBlock Style="{StaticResource H2}" Margin="0,20,0,6" Text="Hvordan skal knappen virke?"/>
+                        <RadioButton GroupName="Udloeser" IsChecked="{Binding TriggerIsToggle, Mode=TwoWay}"
+                                     Content="Ét tryk tænder, næste tryk slukker"/>
+                        <RadioButton GroupName="Udloeser" IsChecked="{Binding TriggerIsHold, Mode=TwoWay}"
+                                     Content="Luppen er tændt så længe knappen holdes nede"/>
+
+                        <CheckBox Margin="0,16,0,0" IsChecked="{Binding BlockTriggerClicks, Mode=TwoWay}"
+                                  Content="Lad ikke andre programmer se udløserklikket"/>
+                        <TextBlock Style="{StaticResource Hint}" Margin="46,0,0,0"
+                                   Text="Anbefales. Ellers kan fx browseren finde på at åbne en ny fane, når du tænder luppen."/>
+
+                        <CheckBox Margin="0,14,0,0" IsChecked="{Binding WheelAlwaysZooms, Mode=TwoWay}"
+                                  Content="Musehjulet alene ændrer forstørrelsen"/>
+                        <TextBlock Style="{StaticResource Hint}" Margin="46,0,0,0"
+                                   Text="Slået fra kan du rulle på sider som normalt, og Ctrl + hjul ændrer forstørrelsen."/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ Læsning ============ -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource H2}" Text="Læsning"/>
+                        <CheckBox IsChecked="{Binding FollowCaret, Mode=TwoWay}"
+                                  Content="Følg skrivemarkøren, når jeg skriver"/>
+                        <CheckBox IsChecked="{Binding ShowCrosshair, Mode=TwoWay}"
+                                  Content="Vis kryds og ring, så jeg kan se hvor musen er"/>
+                        <TextBlock Style="{StaticResource Hint}" Margin="46,0,0,0"
+                                   Text="Musepilen kommer ikke med i det forstørrede billede. Krydset viser hvor den står."/>
+                        <CheckBox Margin="0,10,0,0" IsChecked="{Binding SmoothImage, Mode=TwoWay}"
+                                  Content="Blødt billede"/>
+                        <TextBlock Style="{StaticResource Hint}" Margin="46,0,0,0"
+                                   Text="Slået fra bliver kanterne skarpe og firkantede. Nogle synes det er lettere at læse."/>
+                        <CheckBox Margin="0,10,0,0" IsChecked="{Binding CalmMode, Mode=TwoWay}"
+                                  Content="Rolig tilstand — belaster computeren mindre"/>
+                        <TextBlock Style="{StaticResource Hint}" Margin="46,0,0,0"
+                                   Text="Luppen opdateres 30 gange i sekundet i stedet for 60. Vælg den hvis computeren bliver varm eller træg."/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ Vejledningsbjælken ============ -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource H2}" Text="Vejledningen på skærmen"/>
+                        <CheckBox IsChecked="{Binding ShowInstructions, Mode=TwoWay}"
+                                  Content="Vis den store vejledningsbjælke hele tiden"/>
+                        <TextBlock Style="{StaticResource Hint}" Margin="46,0,0,0"
+                                   Text="Bjælken fortæller altid om luppen er tændt, og hvilken knap der ændrer det. Ctrl + Alt + H skjuler den midlertidigt."/>
+
+                        <TextBlock Style="{StaticResource H2}" Margin="0,20,0,6" Text="Hvor skal bjælken stå?"/>
+                        <RadioButton GroupName="Bjaelke" IsChecked="{Binding InstructionsAtBottom, Mode=TwoWay}"
+                                     Content="Nederst på skærmen"/>
+                        <RadioButton GroupName="Bjaelke" IsChecked="{Binding InstructionsAtTop, Mode=TwoWay}"
+                                     Content="Øverst på skærmen"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
+                            <TextBlock Style="{StaticResource Body}" Text="Tekststørrelse" Width="180"
+                                       VerticalAlignment="Center"/>
+                            <Button Style="{StaticResource StepButton}" Content="−" Command="{Binding InstructionsSmallerCommand}"/>
+                            <Border Width="140" Height="72" Margin="12,0" CornerRadius="8"
+                                    Background="{StaticResource SurfaceAlt}"
+                                    BorderBrush="{StaticResource Line}" BorderThickness="2">
+                                <TextBlock Style="{StaticResource Readout}" Text="{Binding InstructionScaleText}"/>
+                            </Border>
+                            <Button Style="{StaticResource StepButton}" Content="+" Command="{Binding InstructionsBiggerCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ Opstart ============ -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource H2}" Text="Når computeren tændes"/>
+                        <CheckBox IsChecked="{Binding StartWithWindows, Mode=TwoWay}"
+                                  Content="Start Skærmlup sammen med Windows"/>
+                        <CheckBox IsChecked="{Binding StartMagnifierOnLaunch, Mode=TwoWay}"
+                                  Content="Tænd luppen med det samme, når programmet starter"/>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</Window>
