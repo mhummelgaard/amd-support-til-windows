@@ -41,7 +41,12 @@ public static class MagnifierGeometry
         if (monitor.IsEmpty || lensSize.IsEmpty) return default;
 
         zoom = ZoomLadder.Clamp(zoom);
-        var source = SourceFor(focus, lensSize, zoom, monitor);
+        // Kildeområdet klemmes med vilje IKKE ind på skærmen. Gjorde det det, ville musen
+        // ikke længere stå i midten af det udsnit der læses, når man nærmer sig en skærmkant —
+        // og det man peger på ville glide ud mod luppens kant og forsvinde bag rammen. Med en
+        // stor lup begyndte det allerede en tredjedel inde. I stedet får luppen lov at række
+        // ud over kanten, og det der ikke findes derude fyldes med en neutral flade.
+        var source = CenteredSource(focus, lensSize, zoom, monitor);
         if (source.IsEmpty) return default;
 
         // Luppen lægges så den forstørrede udgave af pixlen under musen havner præcis dér,
@@ -82,6 +87,20 @@ public static class MagnifierGeometry
         return Frame(source, view, focus);
     }
 
+    /// <summary>
+    /// Kildeudsnittet centreret om fokuspunktet, uden hensyn til skærmkanten. Så bliver
+    /// det man peger på liggende midt i luppen, hvor det kan ses — hele vejen ud i
+    /// hjørnerne.
+    /// </summary>
+    private static PixelRect CenteredSource(PixelPoint focus, PixelSize viewSize, double zoom, PixelRect monitor)
+    {
+        int sw = Math.Max(1, Math.Min((int)Math.Round(viewSize.Width / zoom), monitor.Width));
+        int sh = Math.Max(1, Math.Min((int)Math.Round(viewSize.Height / zoom), monitor.Height));
+        return PixelRect.CenteredOn(focus, new PixelSize(sw, sh));
+    }
+
+    /// <summary>Som ovenfor, men holdt inden for et område. Bruges af læsebåndet, hvor
+    /// kilden ikke må hente fra båndet selv.</summary>
     private static PixelRect SourceFor(PixelPoint focus, PixelSize viewSize, double zoom, PixelRect bounds)
     {
         int sw = Math.Max(1, (int)Math.Round(viewSize.Width / zoom));

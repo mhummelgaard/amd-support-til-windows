@@ -54,6 +54,11 @@ public readonly record struct PixelRect(int X, int Y, int Width, int Height)
         => new(center.X - size.Width / 2, center.Y - size.Height / 2, size.Width, size.Height);
 
     /// <summary>Sandt hvis de to rektangler deler mindst én pixel.</summary>
+    /// <summary>Den fælles del af to rektangler. Tom hvis de ikke rører hinanden.</summary>
+    public PixelRect Intersect(PixelRect other)
+        => FromBounds(Math.Max(X, other.X), Math.Max(Y, other.Y),
+                      Math.Min(Right, other.Right), Math.Min(Bottom, other.Bottom));
+
     public bool Overlaps(PixelRect other)
     {
         if (IsEmpty || other.IsEmpty) return false;

@@ -28,6 +28,11 @@ internal sealed unsafe class ScreenCapture : IDisposable
             : new ReadOnlySpan<byte>(_bits, Height * Stride);
 
     /// <summary>Kopierer skærmudsnittet ned i bufferen. Falsk hvis Windows ikke kunne levere billedet.</summary>
+    /// <summary>Middelgrå. Den holder sig neutral også når farverne vendes om, hvor sort
+    /// ville blive til en blændende hvid flade midt i synsfeltet.</summary>
+    private const byte OutsideScreen = 0x80;
+
+    /// <summary>Kopierer skærmudsnittet ned i bufferen. Falsk hvis Windows ikke kunne levere billedet.</summary>
     public bool Capture(PixelRect source)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -36,8 +41,19 @@ internal sealed unsafe class ScreenCapture : IDisposable
         if (!EnsureScreenDc()) return false;
         if (!EnsureBuffer(source.Width, source.Height)) return false;
 
-        if (NativeMethods.BitBlt(_memoryDc, 0, 0, source.Width, source.Height,
-                _screenDc, source.X, source.Y, NativeMethods.SRCCOPY))
+        // Luppen får lov at række ud over skærmkanten, så det man peger på bliver
+        // liggende midt i billedet. Der er bare ikke noget at hente derude.
+        var visible = source.Intersect(ScreenInfo.VirtualScreen());
+
+        if (visible != source)
+        {
+            new Span<byte>(_bits, Height * Stride).Fill(OutsideScreen);
+            if (visible.IsEmpty) return true;
+        }
+
+        if (NativeMethods.BitBlt(_memoryDc, visible.X - source.X, visible.Y - source.Y,
+                visible.Width, visible.Height,
+                _screenDc, visible.X, visible.Y, NativeMethods.SRCCOPY))
         {
             return true;
         }

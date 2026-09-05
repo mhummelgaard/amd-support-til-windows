@@ -34,29 +34,48 @@ public class MagnifierGeometryTests
     }
 
     [Fact]
-    public void Lup_og_kilde_holdes_inde_paa_skaermen_i_hjoernet()
+    public void Luppen_holdes_inde_paa_skaermen_i_hjoernet()
     {
+        // Selve vinduet skal blive på skærmen — en lup der hænger halvt udenfor hjælper ingen.
         var frame = MagnifierGeometry.ComputeLensFrame(
             new PixelPoint(0, 0), FullHd, new PixelSize(800, 600), 4);
 
         frame.View.X.ShouldBe(0);
         frame.View.Y.ShouldBe(0);
-        frame.Source.X.ShouldBe(0);
-        frame.Source.Y.ShouldBe(0);
-        frame.Source.Right.ShouldBeLessThanOrEqualTo(FullHd.Right);
-        frame.Source.Bottom.ShouldBeLessThanOrEqualTo(FullHd.Bottom);
+        frame.View.Right.ShouldBeLessThanOrEqualTo(FullHd.Right);
+        frame.View.Bottom.ShouldBeLessThanOrEqualTo(FullHd.Bottom);
     }
 
     [Fact]
-    public void Markoeren_flytter_med_ud_i_hjoernet_i_stedet_for_at_blive_i_midten()
+    public void Kilden_maa_gerne_raekke_ud_over_skaermkanten()
     {
-        // Klemt op i hjørnet falder lup og kilde ikke længere sammen om musen, og
-        // markøren skal derfor tegnes oppe i hjørnet — ikke midt i luppen.
+        // Det modsatte af vinduet: kilden klemmes ikke ind. Gjorde den det, ville musen ikke
+        // længere stå i midten af det udsnit der læses, og det man peger på ville glide ud
+        // mod luppens kant. Det der ikke findes uden for skærmen, fyldes med en neutral flade.
         var frame = MagnifierGeometry.ComputeLensFrame(
             new PixelPoint(0, 0), FullHd, new PixelSize(800, 600), 4);
 
-        frame.Marker.X.ShouldBeLessThan(5);
-        frame.Marker.Y.ShouldBeLessThan(5);
+        frame.Source.X.ShouldBeLessThan(0);
+        frame.Source.Y.ShouldBeLessThan(0);
+    }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(1919, 0)]
+    [InlineData(0, 1079)]
+    [InlineData(1919, 1079)]
+    [InlineData(960, 3)]
+    [InlineData(960, 1077)]
+    public void Det_man_peger_paa_bliver_i_midten_ogsaa_ude_ved_kanten(int x, int y)
+    {
+        // Det her er hele pointen. Før klemte kilden sig ind på skærmen, og så gled det man
+        // pegede på ud mod luppens kant — helt ude ved syv-otte pixels fra rammen, hvor det
+        // forsvandt bag den. Med en stor lup begyndte det allerede en tredjedel inde.
+        var lens = new PixelSize(900, 500);
+        var frame = MagnifierGeometry.ComputeLensFrame(new PixelPoint(x, y), FullHd, lens, 4);
+
+        frame.Marker.X.ShouldBeInRange(lens.Width / 2 - 3, lens.Width / 2 + 3);
+        frame.Marker.Y.ShouldBeInRange(lens.Height / 2 - 3, lens.Height / 2 + 3);
     }
 
     [Fact]

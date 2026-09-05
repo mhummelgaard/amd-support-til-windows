@@ -143,7 +143,7 @@ Skaermlup.Desktop  ──►  Skaermlup.Core
 |---|---|
 | `src/Skaermlup.Core` | Geometri, forstørrelsestrin, farvefiltre, museudløser, indstillinger, alle tekster. Ingen afhængigheder — derfor testbart. |
 | `src/Skaermlup.Desktop` | WPF-vinduer, skærmkopiering, globale muse- og tastaturlyttere. |
-| `tests/Skaermlup.Tests` | 171 enhedstests af kernen. |
+| `tests/Skaermlup.Tests` | 177 enhedstests af kernen. |
 
 ### Sådan vises billedet
 
@@ -326,7 +326,7 @@ winget install Microsoft.DotNet.SDK.10 JRSoftware.InnoSetup Microsoft.PowerShell
 
 `Skaermlup.Core` er rent `net10.0` uden en eneste Windows-afhængighed. Det var et bevidst valg
 fra begyndelsen — al geometri, farvebehandling, museudløser og opskalering ligger dér — og det
-er derfor de 171 tests kan køres i et rent Linux-miljø, uafhængigt af hvad der tilfældigvis er
+er derfor de 177 tests kan køres i et rent Linux-miljø, uafhængigt af hvad der tilfældigvis er
 installeret på Windows-maskinen.
 
 `.devcontainer/` beskriver det miljø. I VS Code åbnes det med **Reopen in Container**. Uden
