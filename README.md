@@ -143,7 +143,7 @@ Skaermlup.Desktop  ──►  Skaermlup.Core
 |---|---|
 | `src/Skaermlup.Core` | Geometri, forstørrelsestrin, farvefiltre, museudløser, indstillinger, alle tekster. Ingen afhængigheder — derfor testbart. |
 | `src/Skaermlup.Desktop` | WPF-vinduer, skærmkopiering, globale muse- og tastaturlyttere. |
-| `tests/Skaermlup.Tests` | 108 enhedstests af kernen. |
+| `tests/Skaermlup.Tests` | 171 enhedstests af kernen. |
 
 ### Sådan vises billedet
 
@@ -301,6 +301,51 @@ pwsh installer/build-installer.ps1
 
 Resultatet er `installer/out/Skaermlup-Setup-<version>.exe` — self-contained, så .NET ikke
 behøver være installeret på maskinen.
+
+## Udviklingsmiljø
+
+Alt bygningsarbejde på selve luppen foregår på Windows. Det er ikke et valg, men en
+konsekvens: `Skaermlup.Desktop` er `net10.0-windows` med WPF og direkte Win32-kald til
+skærmkopiering, vindueslag og museknapper.
+
+Sådan sættes en maskine op fra bunden:
+
+| Skal bruges | Til hvad |
+|---|---|
+| **.NET 10 SDK** | Byg og tests |
+| **Inno Setup 7** | Installeren (`installer/build-installer.ps1`) |
+| **PowerShell 7** | Byggescripterne |
+| **Git** | Kildestyring |
+| Kodesigneringscertifikat | Kun til udgivelser med `uiAccess` — se afsnittet om Start-menuen |
+
+```powershell
+winget install Microsoft.DotNet.SDK.10 JRSoftware.InnoSetup Microsoft.PowerShell Git.Git
+```
+
+### Kernen i en container
+
+`Skaermlup.Core` er rent `net10.0` uden en eneste Windows-afhængighed. Det var et bevidst valg
+fra begyndelsen — al geometri, farvebehandling, museudløser og opskalering ligger dér — og det
+er derfor de 171 tests kan køres i et rent Linux-miljø, uafhængigt af hvad der tilfældigvis er
+installeret på Windows-maskinen.
+
+`.devcontainer/` beskriver det miljø. I VS Code åbnes det med **Reopen in Container**. Uden
+VS Code:
+
+```powershell
+docker build -t skaermlup-kerne .devcontainer
+docker run --rm -v "${PWD}:/workspace" -v skaermlup-nuget:/nuget -v skaermlup-artifacts:/artifacts skaermlup-kerne dotnet test tests/Skaermlup.Tests
+```
+
+De to navngivne arkiver er ikke bare for farten. Containeren skriver med vilje hverken pakker
+eller byggeoutput ind i det monterede projekt: gør den det, støder den ind i de filer
+Windows-byggeriet har lagt i `bin/` og `obj/`, og tidsstempler på dem kan ikke sættes hen over
+bind-monteringen fra NTFS — byggeriet falder fra med `MSB3374`. `ArtifactsPath` i containeren
+sender alt output til `/artifacts` i stedet, så de to byggeveje ikke træder hinanden over
+tæerne. Man kan bygge på Windows og i containeren skiftevis uden at rydde op imellem.
+
+Luppen selv kan ikke bygges der. Containeren fanger fejl i regnestykkerne, ikke i vinduerne —
+og det er også kun regnestykkerne der har tests.
 
 ## Filer og fejlsøgning
 

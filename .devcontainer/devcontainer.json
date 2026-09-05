@@ -1,0 +1,41 @@
+{
+  // Udviklingscontainer til Skaermlup.Core.
+  //
+  // Åbnes med "Reopen in Container" i VS Code, eller bruges direkte med docker compose /
+  // docker build. Formålet er ét bestemt: at kernen kan bygges og efterprøves i et rent
+  // Linux-miljø, uafhængigt af hvad der tilfældigvis er installeret på Windows-maskinen.
+  //
+  // Selve luppen (Skaermlup.Desktop) kan ikke bygges her — se Dockerfile.
+  "name": "Skaermlup.Core",
+
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
+
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+
+  // Pakker og byggeoutput lægges i navngivne arkiver, så de hverken skal hentes forfra hver
+  // gang containeren bygges om, eller havne i projektets egen bin/ og obj/ — se Dockerfile.
+  "mounts": [
+    "source=skaermlup-nuget,target=/nuget,type=volume",
+    "source=skaermlup-artifacts,target=/artifacts,type=volume"
+  ],
+
+  "remoteUser": "ubuntu",
+
+  // Hentes én gang når containeren oprettes, så den er klar til at bygge med det samme.
+  "postCreateCommand": "dotnet restore tests/Skaermlup.Tests/Skaermlup.Tests.csproj",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csdevkit"
+      ],
+      "settings": {
+        "dotnet.defaultSolution": "disable"
+      }
+    }
+  }
+}
