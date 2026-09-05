@@ -285,6 +285,7 @@ internal sealed class AppShell : IDisposable
                 "Windows: " + Environment.OSVersion.VersionString,
                 "Museknappen virker: " + (MouseTriggerWorks ? "ja" : "NEJ"),
                 "Luppen er skjult for skærmkopiering: " + (Magnifier.HiddenFromCapture ? "ja" : "NEJ — brug læsebånd"),
+                "Ring om markøren ved Start-menuen: " + Magnifier.PointerRingStatus,
                 "Skærm ved musen: " + ScreenInfo.MonitorAt(ScreenInfo.CursorPosition()),
                 "Hele skrivebordet: " + ScreenInfo.VirtualScreen(),
                 "Indstillinger: " + _store.FilePath,

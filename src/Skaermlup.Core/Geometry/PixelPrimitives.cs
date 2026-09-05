@@ -53,5 +53,33 @@ public readonly record struct PixelRect(int X, int Y, int Width, int Height)
     public static PixelRect CenteredOn(PixelPoint center, PixelSize size)
         => new(center.X - size.Width / 2, center.Y - size.Height / 2, size.Width, size.Height);
 
+    /// <summary>Sandt hvis de to rektangler deler mindst én pixel.</summary>
+    public bool Overlaps(PixelRect other)
+    {
+        if (IsEmpty || other.IsEmpty) return false;
+        return X < other.Right && other.X < Right && Y < other.Bottom && other.Y < Bottom;
+    }
+
+    /// <summary>Hvor mange pixels de to rektangler deler. Nul hvis de ikke rører hinanden.</summary>
+    public long OverlapArea(PixelRect other)
+    {
+        if (!Overlaps(other)) return 0;
+
+        long w = Math.Min(Right, other.Right) - Math.Max(X, other.X);
+        long h = Math.Min(Bottom, other.Bottom) - Math.Max(Y, other.Y);
+        return w * h;
+    }
+
+    /// <summary>Det mindste rektangel der rummer dem begge. Er den ene tom, gives den anden.</summary>
+    public PixelRect Union(PixelRect other)
+    {
+        if (IsEmpty) return other;
+        if (other.IsEmpty) return this;
+
+        return FromBounds(
+            Math.Min(X, other.X), Math.Min(Y, other.Y),
+            Math.Max(Right, other.Right), Math.Max(Bottom, other.Bottom));
+    }
+
     public override string ToString() => $"{Width}x{Height} ved ({X}, {Y})";
 }

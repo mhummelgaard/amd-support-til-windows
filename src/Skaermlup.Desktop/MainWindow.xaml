@@ -318,6 +318,20 @@
                             </Border>
                             <Button Style="{StaticResource StepButton}" Content="+" Command="{Binding MarkerBiggerCommand}"/>
                         </StackPanel>
+
+                        <CheckBox Margin="0,18,0,0" IsChecked="{Binding ShellMoveLensAside, Mode=TwoWay}"
+                                  Content="Flyt luppen ud til siden når Start-menuen dækker den"/>
+                        <TextBlock Style="{StaticResource Hint}" Margin="0,4,0,0"
+                                   Text="Start-menuen, opgavevisningen og meddelelsescenteret lægger Windows oven på alle almindelige programmer, så luppen forsvinder ind bag dem. Luppen flytter sig derfor ud ved siden af, over eller under menuen og viser det samme forstørrede billede dér."/>
+
+                        <CheckBox Margin="0,14,0,0" IsChecked="{Binding ShellPointerRing, Mode=TwoWay}"
+                                  Content="Sæt samtidig en ring om musepilen"/>
+                        <TextBlock Style="{StaticResource Hint}" Margin="0,4,0,0"
+                                   Text="Ringen tegnes ind i selve musepilen, og den tegner Windows øverst af alt. Så kan du se hvor musen er inde i menuen, mens det forstørrede billede står ved siden af."/>
+                        <TextBlock Style="{StaticResource Hint}" Margin="0,8,0,0"
+                                   Foreground="{StaticResource AccentDark}"
+                                   Visibility="{Binding ShowRingUnavailable, Converter={StaticResource Vis}}"
+                                   Text="Der er ikke plads til ringen ved den markørstørrelse Windows er sat op med. Ret den under Indstillinger → Tilgængelighed → Musemarkør og berøring, og åbn så kontrolpanelet igen."/>
                     </StackPanel>
                 </Border>
 

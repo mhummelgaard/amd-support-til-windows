@@ -2,9 +2,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Skaermlup.Core.Colors;
+using Skaermlup.Core.Input;
 using Skaermlup.Core.Magnification;
 using Skaermlup.Core.Settings;
 using Skaermlup.Core.Text;
+using Skaermlup.Desktop.Interop;
 using Skaermlup.Desktop.Services;
 
 namespace Skaermlup.Desktop.ViewModels;
@@ -258,6 +260,30 @@ internal sealed partial class ControlPanelViewModel : ObservableObject
     private void MarkerSmaller()
         => Set(Math.Max(50, S.MarkerSize - 25), s => s.MarkerSize, (s, v) => s.MarkerSize = v, nameof(MarkerSizeText));
 
+    /// <summary>
+    /// Ringen om musepilen når Start-menuen og resten af Windows' egen skal dækker luppen.
+    /// </summary>
+    public bool ShellPointerRing
+    {
+        get => S.ShellPointerRing;
+        set
+        {
+            Set(value, s => s.ShellPointerRing, (s, v) => s.ShellPointerRing = v);
+            OnPropertyChanged(nameof(ShowRingUnavailable));
+        }
+    }
+
+    /// <summary>Flyt luppen ud til siden af Start-menuen frem for at lade den forsvinde bag den.</summary>
+    public bool ShellMoveLensAside
+    {
+        get => S.ShellMoveLensAside;
+        set => Set(value, s => s.ShellMoveLensAside, (s, v) => s.ShellMoveLensAside = v);
+    }
+
+    /// <summary>Sandt hvis brugeren har bedt om ringen, men markørstørrelsen ikke levner plads.</summary>
+    public bool ShowRingUnavailable
+        => S.ShellPointerRing && CursorRing.Compute(SystemCursor.PointerSize, S.ShellPointerRingSize).IsEmpty;
+
     public bool SmoothImage
     {
         get => S.SmoothImage;
@@ -356,6 +382,9 @@ internal sealed partial class ControlPanelViewModel : ObservableObject
         to.SmoothImage = from.SmoothImage;
         to.Marker = from.Marker;
         to.MarkerSize = from.MarkerSize;
+        to.ShellPointerRing = from.ShellPointerRing;
+        to.ShellPointerRingSize = from.ShellPointerRingSize;
+        to.ShellMoveLensAside = from.ShellMoveLensAside;
         to.BorderThickness = from.BorderThickness;
         to.Trigger = from.Trigger;
         to.TriggerMode = from.TriggerMode;

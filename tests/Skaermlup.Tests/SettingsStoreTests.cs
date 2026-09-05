@@ -1,4 +1,5 @@
 ﻿using Shouldly;
+using Skaermlup.Core.Input;
 using Skaermlup.Core.Magnification;
 using Skaermlup.Core.Settings;
 using Skaermlup.Core.Text;
@@ -70,6 +71,20 @@ public class SettingsStoreTests : IDisposable
         settings.LensWidthPercent.ShouldBe(LensSizer.MaxPercent);
         settings.Contrast.ShouldBe(-50);
         settings.MaxFps.ShouldBe(15);
+    }
+
+    [Fact]
+    public void Ringens_stoerrelse_rettes_naar_filen_laeses()
+    {
+        Directory.CreateDirectory(_folder);
+        System.IO.File.WriteAllText(File1, """
+            { "ShellPointerRingSize": 5000 }
+            """);
+
+        var settings = new SettingsStore(File1).Load();
+
+        settings.ShellPointerRingSize.ShouldBe(CursorRing.MaxScalePercent);
+        settings.ShellPointerRing.ShouldBeTrue();
     }
 
     [Fact]

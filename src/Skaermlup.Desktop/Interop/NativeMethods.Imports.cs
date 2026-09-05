@@ -138,6 +138,44 @@ internal static partial class NativeMethods
     public static extern bool BitBlt(IntPtr hdc, int x, int y, int cx, int cy,
         IntPtr hdcSrc, int x1, int y1, uint rop);
 
+    // ---------- Forgrundsvinduet ----------
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    public static extern int GetClassNameW(IntPtr hWnd, System.Text.StringBuilder lpClassName, int nMaxCount);
+
+    [DllImport("user32.dll", EntryPoint = "GetWindowThreadProcessId")]
+    public static extern uint GetWindowProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr OpenProcess(uint dwDesiredAccess,
+        [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, uint dwProcessId);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool QueryFullProcessImageNameW(IntPtr hProcess, uint dwFlags,
+        System.Text.StringBuilder lpExeName, ref int lpdwSize);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool CloseHandle(IntPtr hObject);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool IsWindowVisible(IntPtr hWnd);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    public static extern IntPtr FindWindowExW(IntPtr hWndParent, IntPtr hWndChildAfter,
+        string? lpszClass, string? lpszWindow);
+
+    /// <summary>Vinduesklassen Windows bruger til alle almindelige nedslåede menuer.</summary>
+    public const string PopupMenuClass = "#32768";
+
+    /// <summary>Nok til at spørge om navnet, og lidt der ikke kræver rettigheder vi ikke har.</summary>
+    public const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
+
     public const uint SRCCOPY = 0x00CC0020;
     public const int BI_RGB = 0;
     public const uint DIB_RGB_COLORS = 0;

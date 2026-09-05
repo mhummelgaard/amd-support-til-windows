@@ -84,6 +84,13 @@ skærmkopi, så luppen tegner selv en markering. Den kan vælges efter hvad man 
 - **Kun en ring.** Ingen streger, dækker mindst muligt.
 - **Brug musens egen pil.** Luppen tegner ingenting.
 
+**Luppen giver ikke op ved Start-menuen.** Windows lægger sin egen skal i et lag luppen ikke kan
+nå, så luppen forsvinder bag Start-menuen, opgavevisningen og meddelelsescenteret. Sker det,
+flytter luppen sig ud ved siden af menuen og viser det samme forstørrede billede dér — og musepilen
+kommer frem igen med en kraftig ring om sig, så man kan se hvor musen står inde i menuen. Ringen
+tegnes ind i selve markøren, og den tegner Windows øverst af alt. Kan ringen ikke være der ved den
+markørstørrelse maskinen er sat op med, bliver den almindelige pil stående i stedet.
+
 Windows egen musepil skjules mens luppen tegner sin egen markering. To markører oven i hinanden
 er forvirrende, og systemets pil tegnes i skærmens egen opløsning og peger skævt når luppen er
 klemt op mod en skærmkant — luppens markering regnes ud fra den faktiske afbildning og passer
@@ -186,11 +193,60 @@ pwsh installer/build-installer.ps1 -CertificateThumbprint <aftryk>
 ```
 
 Uden `-CertificateThumbprint` bygges den almindelige udgave, som går ind bag Start-menuen.
+Den udgave har til gengæld en ring om musen i stedet — se næste afsnit.
 Har man ikke et rigtigt certifikat, kan man lave et til sin egen maskine med
 `installer/opret-selvsigneret-certifikat.ps1` — læs advarslen i toppen af scriptet først, for
 det lægger et rodcertifikat ind i maskinens betroede liste. Skal programmet deles med andre,
 er det et rigtigt certifikat fra en udsteder der skal bruges; så slipper modtagerne også for
 SmartScreen-advarslen.
+
+### Når luppen ikke kan komme til
+
+Uden certifikat er luppen skjult bag Start-menuen. Men kun *dér hvor menuen ligger*. Start-menuen
+fylder et rektangel midt for neden, meddelelsescenteret et i højre side, og uden for det rektangel
+er luppen fuldt synlig som altid.
+
+Derfor flytter luppen sig. Er en af Windows' egne flader fremme, måles dens rektangel, og
+lupvinduet lægges ved siden af, over eller under den — den korteste vej ud, så billedet dukker op
+lige dér hvor øjet i forvejen er. Kun visningen flyttes; kilden bliver liggende ved musen, så det
+er nøjagtig det samme forstørrede billede, bare et andet sted på skærmen. Det gør flytningen til
+en ren forskydning af rektanglet, og hverken forstørrelsen eller markeringens plads inde i billedet
+bliver rørt.
+
+Det gælder kun lupvisningen. Læsebåndet holder med vilje sin kilde uden for båndet, så luppen ikke
+kan komme til at forstørre sig selv; flyttede vi båndet, ville den garanti falde.
+
+Dertil kommer musepilen. Det slemme var ikke, at luppen forsvandt — det var, at luppen samtidig
+havde skjult Windows' egen musepil. Så stod brugeren tilbage med hverken lup eller markør, præcis
+dér hvor man har allermest brug for at kunne se hvor musen er.
+
+Nu holder programmet øje med hvad der ligger øverst. Er det Start-menuen, søgefeltet,
+opgavevisningen, meddelelsescenteret, et flyout fra proceslinjen eller en almindelig menu, kommer
+markøren frem igen — med en kraftig gul ring med sort kant om sig. Musen kan altså findes inde i
+menuen, mens det forstørrede billede af det den peger på står ved siden af.
+
+Ringen tegnes ikke i et vindue. Et vindue ville tabe det samme kapløb som luppen. Den tegnes ind i
+selve markørbilledet med `SetSystemCursor`, og markøren tegner Windows selv, øverst af alt. Det er
+den eneste vej til at få noget til at ligge oven på Start-menuen uden et certifikat.
+
+Selve markøren beholder sin form: pilen bliver en pil, tekstmarkøren en tekstmarkør, hånden en
+hånd. Det kræver at den oprindelige markør kan lægges ind i det nye billede med sin
+gennemsigtighed, og den kan GDI ikke oplyse — den tegner ikke alfakanalen med over i et 32
+bit-billede. Markøren tegnes derfor to gange, én gang på sort og én gang på hvid. Forskellen er
+præcis den baggrund der slap igennem, og dermed kendes gennemsigtigheden; billedet på sort *er*
+farven med gennemsigtigheden ganget ind. Det virker for alle slags markører, også de gamle
+sort/hvide uden alfakanal.
+
+Ringen skal ligge uden for pilen, og pilen fylder den størrelse brugeren har valgt under
+**Indstillinger → Tilgængelighed → Musemarkør og berøring**. Billedet skal altså være flere gange
+så stort som pilen, og Windows tegner ikke markører større end 256x256. Ved en meget stor
+markørstørrelse rammer man det loft. Så gøres ringen først tyndere, og kan den stadig ikke være
+der, meldes der ingen ring — og brugerens egen pil bliver stående i stedet for at blive skiftet ud
+med noget der ser forkert ud. Kontrolpanelet og `diagnostik.txt` siger begge hvad der skete.
+
+De samme sikkerhedsnet som ved den skjulte markør gælder her: markørerne røres kun mens luppen er
+tændt, de hentes frem ad alle veje ud af programmet, og vagtfilen på disken sørger for at et
+nedbrud bliver ryddet op ved næste opstart.
 
 ### Klik gennem luppen
 

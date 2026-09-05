@@ -24,11 +24,23 @@ internal sealed class MagnifierService : IDisposable
     private readonly SystemCursor _cursor = new();
     private readonly DispatcherTimer _timer = new(DispatcherPriority.Render);
 
+    /// <summary>
+    /// Hvor tit der spørges om Windows' egen skal ligger øverst. Hurtigt nok til at markøren
+    /// er der inden brugeren når at lede efter den, langsomt nok til ikke at koste noget.
+    /// </summary>
+    private static readonly TimeSpan ShellPollInterval = TimeSpan.FromMilliseconds(120);
+
     private FollowResolver _follow = new();
     private LensWindow? _lens;
     private ColorMap _colorMap = ColorMap.Identity;
     private PixelPoint _lastCursor = new(int.MinValue, int.MinValue);
     private PixelSize _lastSourceSize = new(200, 150);
+    private readonly System.Diagnostics.Stopwatch _shellClock = System.Diagnostics.Stopwatch.StartNew();
+    private TimeSpan _shellPolledAt = TimeSpan.MinValue;
+    private bool _shellInFront;
+    private PixelRect _shellBounds;
+    private PointerVisual _pointer = PointerVisual.System;
+    private CursorRingLayout _appliedRing = CursorRingLayout.None;
     private bool _disposed;
 
     public MagnifierService(AppSettings settings)
@@ -84,6 +96,12 @@ internal sealed class MagnifierService : IDisposable
         _lens.EnsureClickThrough();
 
         IsActive = true;
+
+        // Et gammelt svar om hvad der lå øverst sidst, siger intet om nu.
+        ShellWatch.Forget();
+        _shellInFront = false;
+        _shellBounds = PixelRect.Empty;
+        _shellPolledAt = TimeSpan.MinValue;
         UpdateSystemCursor();
 
         _timer.Start();
@@ -100,6 +118,10 @@ internal sealed class MagnifierService : IDisposable
         IsActive = false;
         _lens?.Hide();
         _cursor.Show();
+        _pointer = PointerVisual.System;
+        _appliedRing = CursorRingLayout.None;
+        _shellInFront = false;
+        _shellBounds = PixelRect.Empty;
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
@@ -174,11 +196,96 @@ internal sealed class MagnifierService : IDisposable
     /// hinanden er forvirrende, og systemets pil peger forkert når luppen er klemt op mod en
     /// skærmkant. Vælger brugeren "ingen markering", er det netop pilen der skal bruges, og
     /// så bliver den stående.
+    ///
+    /// Ligger Start-menuen eller en anden af Windows' egne flader oven på luppen, gælder det
+    /// modsatte: luppen kan ikke ses alligevel, og så er markøren det eneste brugeren har.
+    /// Den hentes frem igen — med en kraftig ring om, hvis der er plads til en.
     /// </summary>
     private void UpdateSystemCursor()
     {
-        if (IsActive && _settings.Marker != MarkerStyle.None) _cursor.Hide();
-        else _cursor.Show();
+        var ring = _settings.ShellPointerRing
+            ? CursorRing.Compute(SystemCursor.PointerSize, _settings.ShellPointerRingSize)
+            : CursorRingLayout.None;
+
+        var want = PointerRules.Decide(
+            IsActive, _settings.Marker, _shellInFront,
+            ringWanted: _settings.ShellPointerRing, ringPossible: !ring.IsEmpty);
+
+        if (want == _pointer && (want != PointerVisual.HighlightRing || ring == _appliedRing)) return;
+
+        switch (want)
+        {
+            case PointerVisual.Hidden:
+                if (!_cursor.Hide()) want = PointerVisual.System;
+                break;
+
+            case PointerVisual.HighlightRing:
+                // Kan ringen ikke tegnes alligevel, er brugerens egen pil det rigtige svar.
+                if (!_cursor.Highlight(ring))
+                {
+                    _cursor.Show();
+                    want = PointerVisual.System;
+                }
+                break;
+
+            default:
+                _cursor.Show();
+                break;
+        }
+
+        _pointer = want;
+        _appliedRing = want == PointerVisual.HighlightRing ? ring : CursorRingLayout.None;
+    }
+
+    /// <summary>
+    /// Flytter lupvinduet ud til siden af Start-menuen i stedet for at lade det forsvinde ind
+    /// bag den. Kun visningen flyttes — kilden bliver liggende ved musen, så det er det samme
+    /// billede, bare et andet sted på skærmen.
+    ///
+    /// Kun i lupvisning. Læsebåndet holder med vilje sin kilde uden for båndet, så luppen ikke
+    /// kan komme til at forstørre sig selv; flyttede vi båndet, ville den garanti falde.
+    /// </summary>
+    private MagnifierFrame MoveClearOfShell(MagnifierFrame frame, PixelRect monitor)
+    {
+        if (!_settings.ShellMoveLensAside) return frame;
+        if (_settings.Mode != ViewMode.Lens) return frame;
+        if (!_shellInFront || _shellBounds.IsEmpty) return frame;
+
+        var moved = LensDisplacement.MoveClear(frame.View, _shellBounds, monitor);
+        return moved == frame.View ? frame : frame with { View = moved };
+    }
+
+    /// <summary>
+    /// Spørger med jævne mellemrum om Windows' egen skal ligger øverst. Svaret kan skifte uden
+    /// at luppen får besked, så der er ikke andet for end at kigge efter.
+    /// </summary>
+    private void PollShellSurface()
+    {
+        var now = _shellClock.Elapsed;
+        if (_shellPolledAt != TimeSpan.MinValue && now - _shellPolledAt < ShellPollInterval) return;
+
+        _shellPolledAt = now;
+
+        var shell = ShellWatch.Probe();
+        _shellInFront = shell.InFront;
+        _shellBounds = shell.Bounds;
+    }
+
+    /// <summary>Til statusfilen: om ringen om markøren kan lade sig gøre på denne maskine.</summary>
+    public string PointerRingStatus
+    {
+        get
+        {
+            if (!_settings.ShellPointerRing) return "slået fra";
+
+            int pointer = SystemCursor.PointerSize;
+            var ring = CursorRing.Compute(pointer, _settings.ShellPointerRingSize);
+
+            return ring.IsEmpty
+                ? $"NEJ — markørstørrelsen er {pointer} px, og der er ikke plads til en ring. "
+                  + "Skru markøren op eller ned under Indstillinger → Tilgængelighed → Musemarkør og berøring."
+                : $"ja ({ring.Canvas} px om en markør på {pointer} px)";
+        }
     }
 
     private void RebuildColorMap()
@@ -200,6 +307,9 @@ internal sealed class MagnifierService : IDisposable
         if (Math.Abs(_timer.Interval.TotalMilliseconds - interval.TotalMilliseconds) > 0.5)
             _timer.Interval = interval;
 
+        PollShellSurface();
+        UpdateSystemCursor();
+
         RenderOnce();
     }
 
@@ -220,6 +330,8 @@ internal sealed class MagnifierService : IDisposable
 
         if (frame.IsEmpty) return;
         _lastSourceSize = frame.Source.Size;
+
+        frame = MoveClearOfShell(frame, monitor);
 
         if (!_capture.Capture(frame.Source)) return;
 

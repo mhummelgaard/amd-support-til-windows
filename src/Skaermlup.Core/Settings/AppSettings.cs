@@ -1,4 +1,5 @@
-﻿using Skaermlup.Core.Magnification;
+﻿using Skaermlup.Core.Input;
+using Skaermlup.Core.Magnification;
 
 namespace Skaermlup.Core.Settings;
 
@@ -39,6 +40,23 @@ public sealed class AppSettings
     /// <summary>Markeringens størrelse i procent. 100 er udgangspunktet.</summary>
     public int MarkerSize { get; set; } = 100;
 
+    /// <summary>
+    /// Sæt en kraftig ring om musepilen når Windows' egen skal — Start-menuen, opgavevisningen,
+    /// meddelelsescenteret — ligger oven på luppen. Ringen tegnes af Windows selv som en del af
+    /// markøren og ligger derfor øverst, dér hvor luppen ikke kan komme til.
+    /// </summary>
+    public bool ShellPointerRing { get; set; } = true;
+
+    /// <summary>Ringens størrelse i procent af markørens egen. 300 er tre gange så bred som pilen.</summary>
+    public int ShellPointerRingSize { get; set; } = CursorRing.DefaultScalePercent;
+
+    /// <summary>
+    /// Flyt luppen ud til siden af Start-menuen og de andre Windows-flader i stedet for at lade
+    /// den forsvinde ind bag dem. Indholdet er det samme — billedet står bare ved siden af,
+    /// over eller under menuen.
+    /// </summary>
+    public bool ShellMoveLensAside { get; set; } = true;
+
     /// <summary>Rammens tykkelse omkring luppen i pixels. Rammen gør det nemt at se hvor luppen er.</summary>
     public int BorderThickness { get; set; } = 6;
 
@@ -78,6 +96,7 @@ public sealed class AppSettings
         Brightness = Math.Clamp(Brightness, -50, 50);
         BorderThickness = Math.Clamp(BorderThickness, 0, 24);
         MarkerSize = Math.Clamp(MarkerSize, 50, 250);
+        ShellPointerRingSize = CursorRing.ClampScale(ShellPointerRingSize);
         InstructionScale = Math.Clamp(InstructionScale, 75, 250);
         MaxFps = Math.Clamp(MaxFps, 15, 120);
 

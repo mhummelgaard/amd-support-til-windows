@@ -90,6 +90,24 @@ internal static partial class NativeMethods
         public RECT rcCaret;
     }
 
+    /// <summary>Sat i <see cref="GUITHREADINFO.flags"/> når tråden viser en menu.</summary>
+    public const uint GUI_INMENUMODE = 0x00000004;
+
+    /// <summary>Sat i <see cref="GUITHREADINFO.flags"/> når en menu er slået ned.</summary>
+    public const uint GUI_POPUPMENUMODE = 0x00000010;
+
+    /// <summary>Beskriver en markør eller et ikon når det bygges eller læses.</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ICONINFO
+    {
+        /// <summary>Sandt for et ikon, falsk for en markør. En markør har til gengæld et hotspot.</summary>
+        public int fIcon;
+        public int xHotspot;
+        public int yHotspot;
+        public IntPtr hbmMask;
+        public IntPtr hbmColor;
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     public struct MSLLHOOKSTRUCT
     {
