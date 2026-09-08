@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Skaermlup.Core.Colors;
@@ -136,6 +137,42 @@ internal sealed partial class ControlPanelViewModel : ObservableObject
 
     private void SelectColors(ColorScheme scheme)
         => Set(scheme, s => s.Colors, (s, v) => s.Colors = v, nameof(ColorOptions));
+
+    // ---------- Den gule tone ----------
+
+    public string YellowToneText => YellowTones.Name(S.YellowTone);
+
+    public string YellowToneDescription => YellowTones.Description(S.YellowTone);
+
+    /// <summary>
+    /// Selve farven, så ruden mellem knapperne kan males i den tone der er valgt. Uden den
+    /// prøve ville indstillingen kun kunne mærkes i de to gule tilstande — her kan tonen ses
+    /// med det samme, uanset hvilke farver luppen ellers står på.
+    /// </summary>
+    public Brush YellowToneSwatch
+    {
+        get
+        {
+            var (red, green, blue) = YellowTones.Rgb(S.YellowTone);
+            var brush = new SolidColorBrush(Color.FromRgb(red, green, blue));
+            brush.Freeze();
+            return brush;
+        }
+    }
+
+    [RelayCommand]
+    private void YellowToneWarmer() => SetYellowTone(YellowTones.Warmer(S.YellowTone));
+
+    [RelayCommand]
+    private void YellowTonePaler() => SetYellowTone(YellowTones.Paler(S.YellowTone));
+
+    private void SetYellowTone(YellowTone tone)
+    {
+        if (!Set(tone, s => s.YellowTone, (s, v) => s.YellowTone = v, nameof(YellowToneText))) return;
+
+        OnPropertyChanged(nameof(YellowToneDescription));
+        OnPropertyChanged(nameof(YellowToneSwatch));
+    }
 
     public string ContrastText => Signed(S.Contrast);
 
@@ -377,6 +414,7 @@ internal sealed partial class ControlPanelViewModel : ObservableObject
         to.DockEdge = from.DockEdge;
         to.DockHeightPercent = from.DockHeightPercent;
         to.Colors = from.Colors;
+        to.YellowTone = from.YellowTone;
         to.Contrast = from.Contrast;
         to.Brightness = from.Brightness;
         to.SmoothImage = from.SmoothImage;

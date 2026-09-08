@@ -40,7 +40,7 @@ internal static class SelfTest
             lines.Add("Forskellige tonetrin i proeven: " + DistinctTones(capture.Pixels)
                       + " (1 betyder et helt ensfarvet billede)");
 
-            var map = ColorMap.Build(ColorScheme.Inverted, 0, 0);
+            var map = ColorMap.Build(ColorScheme.Inverted, 0, 0, YellowTone.Pure);
             var destination = new byte[capture.Height * capture.Stride];
 
             timer.Restart();

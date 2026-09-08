@@ -41,7 +41,8 @@ public sealed class ColorMap
 
     /// <param name="contrast">-50 til 50. 0 er skærmens egen kontrast.</param>
     /// <param name="brightness">-50 til 50. 0 er skærmens egen lysstyrke.</param>
-    public static ColorMap Build(ColorScheme scheme, int contrast, int brightness)
+    /// <param name="tone">Hvilken gul de to gule tilstande skal bruge. Uden betydning for resten.</param>
+    public static ColorMap Build(ColorScheme scheme, int contrast, int brightness, YellowTone tone)
     {
         contrast = Math.Clamp(contrast, -50, 50);
         brightness = Math.Clamp(brightness, -50, 50);
@@ -85,20 +86,36 @@ public sealed class ColorMap
             }
 
             case ColorScheme.YellowOnBlack:
-            {
-                var lit = Map(pre, v => 255 - v);
-                return new ColorMap(false, true, Zeros(), lit, lit);
-            }
+                return Tinted(Map(pre, v => 255 - v), tone);
 
             case ColorScheme.BlackOnYellow:
-                return new ColorMap(false, true, Zeros(), pre, pre);
+                return Tinted(pre, tone);
 
             default:
                 return Identity;
         }
     }
 
-    private static byte[] Zeros() => new byte[256];
+    /// <summary>
+    /// Farver en gråtonetabel gul. Hver kanal skaleres for sig, så tabellens lyseste værdi
+    /// rammer præcis den valgte gule og alt derunder følger med ned mod sort i samme forhold.
+    /// Med den rene gule er blå nul og de to andre uændrede — altså nøjagtig som før tonen
+    /// kunne vælges.
+    /// </summary>
+    private static ColorMap Tinted(byte[] gray, YellowTone tone)
+    {
+        var (red, green, blue) = YellowTones.Rgb(tone);
+        return new ColorMap(false, true, Scale(gray, blue), Scale(gray, green), Scale(gray, red));
+    }
+
+    private static byte[] Scale(byte[] source, byte level)
+    {
+        if (level == 0) return new byte[256];
+
+        var result = new byte[256];
+        for (int i = 0; i < 256; i++) result[i] = (byte)((source[i] * level + 127) / 255);
+        return result;
+    }
 
     private static byte[] Map(byte[] source, Func<int, int> transform)
     {

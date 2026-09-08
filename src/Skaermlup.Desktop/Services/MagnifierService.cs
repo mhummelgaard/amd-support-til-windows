@@ -289,7 +289,8 @@ internal sealed class MagnifierService : IDisposable
     }
 
     private void RebuildColorMap()
-        => _colorMap = ColorMap.Build(_settings.Colors, _settings.Contrast, _settings.Brightness);
+        => _colorMap = ColorMap.Build(_settings.Colors, _settings.Contrast, _settings.Brightness,
+                                      _settings.YellowTone);
 
     /// <summary>
     /// Billedtakten. Står musen stille, er der sjældent noget nyt at vise, og så skrues der

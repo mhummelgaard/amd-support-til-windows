@@ -106,6 +106,17 @@ hvid side.
 sort, sort på gul, hvid på sort og gråtoner, plus kontrast og lysstyrke. Omvendte farver er for
 mange med AMD den største enkeltforskel.
 
+**Den gule kan vælges.** "Gul" er ikke én farve, og hvilken der er rarest at læse er forskelligt
+fra person til person. Der er fem toner fra varm til bleg — ravgul, gyldengul, ren gul, citrongul
+og flødegul — som vælges med en minus- og en plusknap. Ravgul har næsten intet blåt lys i sig og
+blænder mindst; flødegul er mildest at have som baggrund på en hel skærm. Ruden mellem knapperne
+males i tonen, så den kan ses med det samme og ikke først skal prøves i luppen.
+
+Tonen lægges på gråtonerne ved at skalere hver farvekanal for sig, så billedets lyseste punkt
+rammer præcis den valgte gule og alt derunder følger med ned mod sort i samme forhold. Forholdet
+mellem kanalerne er dermed det samme hele vejen, og en blød bogstavkant skifter ikke farve på vej
+mod bunden.
+
 **Luppen følger skrivemarkøren.** Skriver man i et tekstfelt, flytter luppen med — indtil musen
 røres, for musen har altid forkørselsret. Piletasterne kan flytte luppen helt uden mus.
 
@@ -143,7 +154,7 @@ Skaermlup.Desktop  ──►  Skaermlup.Core
 |---|---|
 | `src/Skaermlup.Core` | Geometri, forstørrelsestrin, farvefiltre, museudløser, indstillinger, alle tekster. Ingen afhængigheder — derfor testbart. |
 | `src/Skaermlup.Desktop` | WPF-vinduer, skærmkopiering, globale muse- og tastaturlyttere. |
-| `tests/Skaermlup.Tests` | 177 enhedstests af kernen. |
+| `tests/Skaermlup.Tests` | 191 enhedstests af kernen. |
 
 ### Sådan vises billedet
 
@@ -326,7 +337,7 @@ winget install Microsoft.DotNet.SDK.10 JRSoftware.InnoSetup Microsoft.PowerShell
 
 `Skaermlup.Core` er rent `net10.0` uden en eneste Windows-afhængighed. Det var et bevidst valg
 fra begyndelsen — al geometri, farvebehandling, museudløser og opskalering ligger dér — og det
-er derfor de 177 tests kan køres i et rent Linux-miljø, uafhængigt af hvad der tilfældigvis er
+er derfor de 191 tests kan køres i et rent Linux-miljø, uafhængigt af hvad der tilfældigvis er
 installeret på Windows-maskinen.
 
 `.devcontainer/` beskriver det miljø. I VS Code åbnes det med **Reopen in Container**. Uden

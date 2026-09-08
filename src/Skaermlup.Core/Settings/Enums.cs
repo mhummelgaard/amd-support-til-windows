@@ -61,6 +61,30 @@ public enum ColorScheme
     WhiteOnBlack = 6,
 }
 
+/// <summary>
+/// Hvilken gul de to gule tilstande bruger. Hvad der er rarest at læse er forskelligt fra
+/// person til person: den varme rav har næsten intet blåt i sig og blænder mindst, mens den
+/// blege fløde er mildere at have som baggrund på en hel skærm. Rækkefølgen går fra varmest
+/// til blegest, så en minus- og en plusknap er nok til at finde sin egen.
+/// </summary>
+public enum YellowTone
+{
+    /// <summary>Varm rav som på de gamle ravskærme. Mindst blåt lys.</summary>
+    Amber = 0,
+
+    /// <summary>Gylden — et trin varmere end den rene gule.</summary>
+    Golden = 1,
+
+    /// <summary>Ren gul. Den kraftigste, og den største forskel til sort.</summary>
+    Pure = 2,
+
+    /// <summary>Citrongul: lysere og mildere end den rene.</summary>
+    Lemon = 3,
+
+    /// <summary>Bleg flødegul, næsten som gulligt papir.</summary>
+    Cream = 4,
+}
+
 /// <summary>Hvad museknapperne skal gøre ved luppen.</summary>
 public enum TriggerMode
 {

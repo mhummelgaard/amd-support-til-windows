@@ -95,3 +95,62 @@ public class ColorSchemesTests
         }
     }
 }
+
+public class YellowTonesTests
+{
+    [Fact]
+    public void Tonerne_gaar_fra_varmest_til_blegest()
+    {
+        // Blåt er det der adskiller en varm rav fra en bleg fløde, og det skal stige
+        // hele vejen. Ellers ville minus- og plusknappen ikke svare til noget man kan se.
+        for (int i = 1; i < YellowTones.Order.Count; i++)
+        {
+            var before = YellowTones.Rgb(YellowTones.Order[i - 1]);
+            var now = YellowTones.Rgb(YellowTones.Order[i]);
+
+            (now.Green + now.Blue).ShouldBeGreaterThan(before.Green + before.Blue);
+        }
+    }
+
+    [Fact]
+    public void Alle_toner_har_fuld_roed_saa_de_bliver_ved_med_at_vaere_gule()
+    {
+        foreach (YellowTone tone in Enum.GetValues<YellowTone>())
+        {
+            var (red, green, blue) = YellowTones.Rgb(tone);
+
+            red.ShouldBe((byte)255);
+            green.ShouldBeGreaterThan(blue);
+        }
+    }
+
+    [Fact]
+    public void Trinene_bliver_staaende_i_enderne_i_stedet_for_at_gaa_rundt()
+    {
+        YellowTones.Warmer(YellowTones.Order[0]).ShouldBe(YellowTones.Order[0]);
+        YellowTones.Paler(YellowTones.Order[^1]).ShouldBe(YellowTones.Order[^1]);
+    }
+
+    [Fact]
+    public void Et_trin_frem_og_et_tilbage_ender_samme_sted()
+    {
+        YellowTones.Warmer(YellowTones.Paler(YellowTone.Pure)).ShouldBe(YellowTone.Pure);
+        YellowTones.Paler(YellowTones.Warmer(YellowTone.Pure)).ShouldBe(YellowTone.Pure);
+    }
+
+    [Fact]
+    public void En_ukendt_vaerdi_lander_paa_den_rene_gule()
+    {
+        YellowTones.Paler((YellowTone)99).ShouldBe(YellowTone.Lemon);
+    }
+
+    [Fact]
+    public void Alle_toner_har_et_dansk_navn()
+    {
+        foreach (YellowTone tone in Enum.GetValues<YellowTone>())
+        {
+            YellowTones.Name(tone).ShouldNotBeNullOrWhiteSpace();
+            YellowTones.Description(tone).ShouldNotBeNullOrWhiteSpace();
+        }
+    }
+}

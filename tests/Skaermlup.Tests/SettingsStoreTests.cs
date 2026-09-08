@@ -35,6 +35,7 @@ public class SettingsStoreTests : IDisposable
         var settings = store.Load();
         settings.Zoom = 8;
         settings.Colors = ColorScheme.YellowOnBlack;
+        settings.YellowTone = YellowTone.Amber;
         settings.Trigger = MouseTriggerButtons.SideBack | MouseTriggerButtons.Middle;
         store.Save(settings);
 
@@ -42,6 +43,7 @@ public class SettingsStoreTests : IDisposable
 
         again.Zoom.ShouldBe(8);
         again.Colors.ShouldBe(ColorScheme.YellowOnBlack);
+        again.YellowTone.ShouldBe(YellowTone.Amber);
         again.Trigger.ShouldBe(MouseTriggerButtons.SideBack | MouseTriggerButtons.Middle);
     }
 

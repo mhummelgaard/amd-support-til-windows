@@ -26,6 +26,9 @@ public sealed class AppSettings
 
     public ColorScheme Colors { get; set; } = ColorScheme.Normal;
 
+    /// <summary>Hvilken gul de to gule tilstande bruger. Den rene gule er udgangspunktet.</summary>
+    public YellowTone YellowTone { get; set; } = YellowTone.Pure;
+
     public int Contrast { get; set; }
 
     public int Brightness { get; set; }
@@ -104,6 +107,7 @@ public sealed class AppSettings
         if (!Enum.IsDefined(Shape)) Shape = LensShape.Rectangle;
         if (!Enum.IsDefined(DockEdge)) DockEdge = DockEdge.Top;
         if (!Enum.IsDefined(Colors)) Colors = ColorScheme.Normal;
+        if (!Enum.IsDefined(YellowTone)) YellowTone = YellowTone.Pure;
         if (!Enum.IsDefined(Marker)) Marker = MarkerStyle.Crosshair;
         if (!Enum.IsDefined(TriggerMode)) TriggerMode = TriggerMode.Toggle;
         if (!Enum.IsDefined(Wheel)) Wheel = WheelAction.ModifierOnly;

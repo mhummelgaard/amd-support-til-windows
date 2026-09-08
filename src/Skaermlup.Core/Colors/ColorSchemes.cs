@@ -43,8 +43,8 @@ public static class ColorSchemes
         ColorScheme.HighContrast => "Beholder farverne, men gør lyst lysere og mørkt mørkere.",
         ColorScheme.Inverted => "Vender lyst og mørkt om. Mindre blænding fra hvide sider.",
         ColorScheme.Grayscale => "Fjerner farverne, så kun lys og mørke er tilbage.",
-        ColorScheme.YellowOnBlack => "Sort bund med gul tekst. Meget høj kontrast.",
-        ColorScheme.BlackOnYellow => "Gul bund med sort tekst.",
+        ColorScheme.YellowOnBlack => "Sort bund med gul tekst. Meget høj kontrast. Den gule tone kan vælges.",
+        ColorScheme.BlackOnYellow => "Gul bund med sort tekst. Den gule tone kan vælges.",
         ColorScheme.WhiteOnBlack => "Sort bund med hvid tekst.",
         _ => string.Empty,
     };
