@@ -14,7 +14,7 @@
     <ApplicationIcon>Assets\skaermlup.ico</ApplicationIcon>
     <RootNamespace>Skaermlup.Desktop</RootNamespace>
     <AssemblyName>Skaermlup</AssemblyName>
-    <Version>1.3.0</Version>
+    <Version>1.4.0</Version>
     <AssemblyTitle>Skaermlup - forstoerrelsesglas til skaermen</AssemblyTitle>
     <Company>Michael Hummelgaard</Company>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>

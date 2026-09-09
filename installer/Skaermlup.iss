@@ -5,7 +5,7 @@
 
 #define AppName "Skaermlup"
 #define AppDisplayName "Skærmlup"
-#define AppVersion "1.3.0"
+#define AppVersion "1.4.0"
 #define Publisher "Michael Hummelgaard"
 #define ExeName "Skaermlup.exe"
 #define PublishDir "..\src\Skaermlup.Desktop\bin\Release\net10.0-windows\win-x64\publish"

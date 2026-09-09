@@ -3,7 +3,7 @@
 Sporing af hver eneste datastrøm i Skærmlup, og hvad den betyder i forhold til GDPR, NIS2,
 ISO/IEC 27001 og CRA.
 
-**Version:** Skærmlup 1.3.0 (+ advarslen ved prøvebilleder) · **Skrevet:** 2026-09-09 · **Gælder commit:** se `git log` for denne fil
+**Version:** Skærmlup 1.4.0 · **Skrevet:** 2026-09-09 · **Gælder commit:** se `git log` for denne fil
 
 ---
 
@@ -253,8 +253,8 @@ Hvad der typisk bliver spurgt om, og hvor projektet står:
 | Forventning i forsyningskæden | Status |
 |---|---|
 | Sikker udvikling og versionsstyring | **God.** Alt i Git, 191 tests, lagdelt arkitektur med en kerne uden systemafhængigheder |
-| Håndtering af sårbarheder | **Mangler.** Ingen offentlig kanal til at melde en sårbarhed ind. Se G4 |
-| Styklister over komponenter (SBOM) | **Mangler.** Ville tage en time at automatisere. Se G5 |
+| Håndtering af sårbarheder | **God.** [SECURITY.md](../SECURITY.md) med adresse og svarfrister |
+| Styklister over komponenter (SBOM) | **God.** CycloneDX, genereret ud af byggeriet ved hver udgivelse |
 | Integritet af det udleverede | **Mangler.** Installeren er ikke kodesigneret. Se G1 |
 | Hændelseshåndtering | **Ikke relevant** som enhed, men kunden vil vide, hvordan de får fat i udvikleren |
 | Kryptering, adgangsstyring, netværkssikkerhed | **Ikke relevant.** Der er ingen tjeneste, ingen konti og ingen netværkstrafik |
@@ -270,10 +270,10 @@ som huskeliste. De kontroller der faktisk kan bæres af et projekt som dette:
 
 | Kontrol (27001:2022) | Status |
 |---|---|
-| A.8.25 Sikker udviklingslivscyklus | **Delvis.** Fast rytme med tests og versioner. Ingen skreven trusselsmodel — dette dokument er første skridt |
+| A.8.25 Sikker udviklingslivscyklus | **God.** Fast rytme med tests og versioner, og en skreven [trusselsmodel](trusselsmodel.md) |
 | A.8.26 Sikkerhedskrav til programmet | **Delvis.** Kravene står i README og her, ikke som selvstændige krav |
 | A.8.28 Sikker kodning | **God.** `nullable` slået til, `unsafe` kun i skærmkopieringen, nul advarsler i byg |
-| A.8.8 Håndtering af tekniske sårbarheder | **Mangler.** Ingen fast gennemgang af afhængigheder. Kun én pakke, så arbejdet er småt |
+| A.8.8 Håndtering af tekniske sårbarheder | **Delvis.** Kanal til indrapportering findes nu; afhængigheder gennemgås stadig ikke systematisk. Kun én pakke, så arbejdet er småt |
 | A.8.31 Adskilte miljøer | **God.** Byg og test kører også i en container uden Windows-afhængigheder |
 | A.8.32 Ændringsstyring | **God.** Alt gennem Git med sporbare commits; udgivelser bærer commit-id i `ProductVersion` |
 | A.5.20/5.21 Leverandørkæde | **God i praksis.** Én afhængighed, tre system-DLL'er |
@@ -313,14 +313,18 @@ små, er der ingenting at haste med senere.
 | **G1** | **Installeren er ikke kodesigneret** | Brugeren kan ikke se, om filen er ægte, og SmartScreen advarer ved hver installation. En bruger med AMD, der er blevet lært at klikke advarsler væk, er en sikkerhedsrisiko i sig selv. Rammer NIS2-forsyningskæde, CRA og A.8.25 på én gang | Køb af certifikat. Byggeriet er klar via `-CertificateThumbprint` |
 | **G2** | **Prøvebilleder kan indeholde alt** | Se A.3. Brugeren kan i sagens natur ikke altid læse, hvad billedet viser, før det sendes | Lille |
 | ~~**G3**~~ | ~~Ingen advarsel på skærmen ved `--proevebillede`~~ | **Lukket.** Efter et prøvebillede vises et vindue i programmets egen skriftstørrelse: billederne viser hvad der stod på skærmen, se dem igennem før de sendes. Knap der åbner mappen. Teksterne ligger i `SampleWarning` og er dækket af tests | Gjort |
-| **G4** | **Ingen kanal til at melde sårbarheder** | Første spørgsmål i ethvert offentligt udbud. En `SECURITY.md` med en adresse og en svarfrist rækker | En time |
-| **G5** | **Ingen SBOM** | CRA vil kræve den. Med én afhængighed er den triviel at lave | En time |
+| ~~**G4**~~ | ~~Ingen kanal til at melde sårbarheder~~ | **Lukket.** [SECURITY.md](../SECURITY.md): adresse, svarfrister, hvad der er i spil og hvad der er design | Gjort |
+| ~~**G5**~~ | ~~Ingen SBOM~~ | **Lukket.** CycloneDX 1.6 i [docs/sbom/](sbom/), genereret af `installer/lav-sbom.ps1` ud af `Skaermlup.deps.json` — ikke skrevet i hånden | Gjort |
 | ~~**G6**~~ | ~~Kørselsobservation mangler~~ | **Lukket.** Målt på den installerede 1.3.0: `ws2_32.dll` aldrig indlæst, nul endepunkter. Se A.5 | Gjort |
-| **G7** | **Ingen skreven trusselsmodel** | Dette dokument er den halve vej. Den anden halvdel er "hvem kunne finde på at angribe det her, og hvordan" | En eftermiddag |
+| ~~**G7**~~ | ~~Ingen skreven trusselsmodel~~ | **Lukket.** [Trusselsmodel](trusselsmodel.md): fem angribertyper, otte trusler. Konklusionen er at T1 — falsk installer — er den tungeste, og at den kun løses med G1 | Gjort |
 
-G1 er den eneste, der koster penge. Af de resterende kan G4 og G5 laves på en time hver.
-G2 er ikke et hul der kan lukkes — et prøvebillede *skal* vise skærmen for at være til
-nogen nytte — men G3 gør risikoen synlig for den, der løber den.
+**Kun G1 står tilbage** — og det er samtidig den tungeste trussel i
+[trusselsmodellen](trusselsmodel.md). Den er også den eneste, der koster penge frem for
+arbejde.
+
+G2 er ikke et hul, der kan lukkes: et prøvebillede *skal* vise skærmen for at være til
+nogen nytte. G3 gør risikoen synlig for den, der løber den, og det er så langt et program
+kan komme.
 
 ## B.6 Hvad man svarer i et udbud
 
@@ -348,4 +352,4 @@ Dette dokument er kun sandt for den commit, det står i. Det skal gennemgås nå
 - `efterproev-dataflow.ps1` fejler
 - der overhovedet kommer noget netværk i programmet — så skal hele del A skrives om
 
-Sidst efterprøvet mod koden: 2026-09-09, Skærmlup 1.3.0 plus advarslen ved prøvebilleder.
+Sidst efterprøvet mod koden: 2026-09-09, Skærmlup 1.4.0.

@@ -153,9 +153,10 @@ Skaermlup.Desktop  ──►  Skaermlup.Core
 | Projekt | Ansvar |
 |---|---|
 | `src/Skaermlup.Core` | Geometri, forstørrelsestrin, farvefiltre, museudløser, indstillinger, alle tekster. Ingen afhængigheder — derfor testbart. |
-| `src/Skaermlup.Desktop` | WPF-vinduer, skærmkopiering, globale muse- og tastaturlyttere. |
-| `tests/Skaermlup.Tests` | 191 enhedstests af kernen. |
-| `docs/` | [Dataflow og compliance](docs/dataflow-og-compliance.md) — hver datastrøm sporet, og hvad den betyder for GDPR, NIS2, ISO og CRA. |
+| `src/Skaermlup.Desktop` | WPF-vinduer, skærmkopiering, global musekrog og tastaturgenveje. Ingen tastaturaflytning — se [dataflowsporingen](docs/dataflow-og-compliance.md). |
+| `tests/Skaermlup.Tests` | 193 enhedstests af kernen. |
+| `docs/` | [Dataflow og compliance](docs/dataflow-og-compliance.md), [trusselsmodel](docs/trusselsmodel.md) og [stykliste](docs/sbom/). Hver datastrøm sporet, og hvad den betyder for GDPR, NIS2, ISO og CRA. |
+| [`SECURITY.md`](SECURITY.md) | Sådan melder du en sårbarhed, og hvad du kan forvente. |
 
 ### Sådan vises billedet
 
@@ -338,7 +339,7 @@ winget install Microsoft.DotNet.SDK.10 JRSoftware.InnoSetup Microsoft.PowerShell
 
 `Skaermlup.Core` er rent `net10.0` uden en eneste Windows-afhængighed. Det var et bevidst valg
 fra begyndelsen — al geometri, farvebehandling, museudløser og opskalering ligger dér — og det
-er derfor de 191 tests kan køres i et rent Linux-miljø, uafhængigt af hvad der tilfældigvis er
+er derfor de 193 tests kan køres i et rent Linux-miljø, uafhængigt af hvad der tilfældigvis er
 installeret på Windows-maskinen.
 
 `.devcontainer/` beskriver det miljø. I VS Code åbnes det med **Reopen in Container**. Uden
