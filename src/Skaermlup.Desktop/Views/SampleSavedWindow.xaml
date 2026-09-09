@@ -1,0 +1,67 @@
+<Window x:Class="Skaermlup.Desktop.Views.SampleSavedWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Style="{StaticResource AmdWindow}"
+        Height="800" Width="880" MinHeight="480" MinWidth="640"
+        WindowStartupLocation="CenterScreen"
+        Topmost="True">
+
+    <DockPanel>
+
+        <!-- Hovedet er advarselsfarvet. Det skal kunne ses at det ikke bare er en kvittering. -->
+        <Border DockPanel.Dock="Top" Background="{StaticResource Danger}" Padding="22,16">
+            <StackPanel>
+                <TextBlock x:Name="Headline" Style="{StaticResource H1}"/>
+                <TextBlock x:Name="Subheadline" FontSize="21" Foreground="#FFE8E4"
+                           Margin="0,4,0,0" TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+
+        <Border DockPanel.Dock="Bottom" Background="{StaticResource Surface}"
+                BorderBrush="{StaticResource Line}" BorderThickness="0,2,0,0" Padding="22,14">
+            <DockPanel>
+                <Button x:Name="OpenButton" DockPanel.Dock="Left"
+                        Style="{StaticResource PrimaryButton}" Click="OnOpenFolder"/>
+                <Button x:Name="CloseButton" DockPanel.Dock="Right"
+                        HorizontalAlignment="Right" Click="OnClose" IsCancel="True"/>
+            </DockPanel>
+        </Border>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+            <StackPanel Margin="24,20,24,24">
+
+                <Border Style="{StaticResource Card}" Background="{StaticResource DangerSoft}"
+                        BorderBrush="{StaticResource Danger}">
+                    <ItemsControl x:Name="Body">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Style="{StaticResource Body}" Text="{Binding}"
+                                           FontSize="22" Margin="0,0,0,14"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock x:Name="FolderHeading" Style="{StaticResource H2}"/>
+                        <TextBox x:Name="FolderPath" IsReadOnly="True" FontSize="19"
+                                 Margin="0,6,0,0" Padding="10,8" TextWrapping="Wrap"
+                                 Background="{StaticResource SurfaceAlt}"
+                                 BorderBrush="{StaticResource Line}" BorderThickness="2"/>
+
+                        <TextBlock x:Name="FileHeading" Style="{StaticResource H2}" Margin="0,20,0,6"/>
+                        <ItemsControl x:Name="Files">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Style="{StaticResource Body}" Text="{Binding}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</Window>

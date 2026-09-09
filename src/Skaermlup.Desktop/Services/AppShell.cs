@@ -168,6 +168,19 @@ internal sealed class AppShell : IDisposable
     public IReadOnlyList<string> SaveDiagnosticImages(string folder)
         => DiagnosticImages.SaveTo(folder, Magnifier.LensWindow, _bar, _panel, _help);
 
+    /// <summary>
+    /// Siger tydeligt fra bagefter: billederne viser skærmen. Vinduet returneres, fordi
+    /// den kopi af programmet der kun blev startet for at tage prøvebilledet, skal blive
+    /// stående indtil advarslen er læst — ikke lukke ned midt i den.
+    /// </summary>
+    public Window ShowSampleSaved(string folder, IReadOnlyList<string> savedFiles)
+    {
+        var window = new SampleSavedWindow(folder, savedFiles);
+        window.Show();
+        window.Activate();
+        return window;
+    }
+
     public void ShowHelp()
     {
         if (_help is null)

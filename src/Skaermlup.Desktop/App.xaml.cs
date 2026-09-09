@@ -96,7 +96,19 @@ public partial class App : Application
     private void SaveRequestedSample()
     {
         string? folder = SampleRequest.Take();
-        if (folder is not null) _shell?.SaveDiagnosticImages(folder);
+        if (folder is not null) SaveSampleAndWarn(folder);
+    }
+
+    /// <summary>
+    /// Gemmer billederne og advarer om hvad de indeholder. De to veje ind i
+    /// prøvebilledet deler denne, så advarslen ikke kan glemmes det ene sted.
+    /// </summary>
+    private Window? SaveSampleAndWarn(string folder)
+    {
+        if (_shell is null) return null;
+
+        var saved = _shell.SaveDiagnosticImages(folder);
+        return _shell.ShowSampleSaved(folder, saved);
     }
 
     private static string? SampleFolder(IEnumerable<string> args)
@@ -123,8 +135,14 @@ public partial class App : Application
         timer.Tick += (_, _) =>
         {
             timer.Stop();
-            _shell?.SaveDiagnosticImages(folder);
-            Shutdown();
+            var warning = SaveSampleAndWarn(folder);
+
+            // Luppen blev kun tændt for at tage billedet. Bliver den stående, skal
+            // brugeren ramme en knap i advarslen med en musepil der er skjult.
+            _shell?.Magnifier.TurnOff();
+
+            if (warning is null) { Shutdown(); return; }
+            warning.Closed += (_, _) => Shutdown();
         };
         timer.Start();
     }

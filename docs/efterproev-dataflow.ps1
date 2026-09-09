@@ -98,6 +98,12 @@ Test-Paastand 'Registreringsdatabasen roeres kun i brugerens egen gren' {
         ForEach-Object { "$($_.Filename):$($_.LineNumber)  $($_.Line.Trim())" }
 }
 
+Test-Paastand 'Programmet starter kun stifinderen, og kun fra advarselsvinduet' {
+    $cs | Select-String -Pattern 'Process\.Start' |
+        Where-Object { $_.Filename -ne 'SampleSavedWindow.xaml.cs' } |
+        ForEach-Object { "$($_.Filename):$($_.LineNumber)  $($_.Line.Trim())" }
+}
+
 Write-Host ''
 if ($fejl -gt 0) {
     Write-Host "$fejl paastand(e) holder ikke laengere. Ret docs/dataflow-og-compliance.md i samme commit." -ForegroundColor Red

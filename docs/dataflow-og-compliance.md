@@ -3,7 +3,7 @@
 Sporing af hver eneste datastrøm i Skærmlup, og hvad den betyder i forhold til GDPR, NIS2,
 ISO/IEC 27001 og CRA.
 
-**Version:** Skærmlup 1.3.0 · **Skrevet:** 2026-09-09 · **Gælder commit:** se `git log` for denne fil
+**Version:** Skærmlup 1.3.0 (+ advarslen ved prøvebilleder) · **Skrevet:** 2026-09-09 · **Gælder commit:** se `git log` for denne fil
 
 ---
 
@@ -116,8 +116,12 @@ Det er ikke en fejl — det er hele pointen med billedet — men det betyder:
 
 - Filerne havner i en mappe **brugeren selv angiver**. Programmet vælger ikke, og sender ikke.
 - Intet forlader maskinen, medmindre brugeren selv vedhæfter filen i en mail.
-- **Anbefaling:** en bruger med AMD kan ikke nødvendigvis se, hvad der står på billedet, før det
-  sendes. Der bør stå en advarsel på skærmen, når kommandoen køres. Se G3 i afsnit B.5.
+- **Derfor advares der nu på skærmen.** Når billederne er gemt, kommer der et vindue i
+  programmets egen skriftstørrelse — ikke en systemdialog med lillebitte tekst — der siger
+  hvad billederne indeholder, hvor de ligger, og at de skal ses igennem før de sendes. En
+  knap åbner mappen, for at finde en mappe frem er svært nok med fuldt syn. Teksterne
+  ligger i [`SampleWarning`](../src/Skaermlup.Core/Text/SampleWarning.cs) og er dækket af
+  tests, så de ikke kan skrives om til noget venligt og vagt.
 
 ## A.4 Sikkerhedsegenskaber der allerede er der
 
@@ -141,23 +145,47 @@ De negative påstande er de vigtigste i dokumentet, så her står præcis hvor l
 | Ingen netværk via native kald | 52 `DllImport` mod udelukkende `user32`, `gdi32`, `kernel32`. Ingen `wininet`, `winhttp`, `ws2_32` | Stærk |
 | Ingen telemetri, ingen nedbrudsrapportering, ingen opdateringstjek | Ingen sådan kode findes; den eneste udgående kanal ville være netværk, og det er dækket ovenfor | Stærk |
 | Ingen tastaturaflytning | Ingen `WH_KEYBOARD`-krog. `GetAsyncKeyState` kun for Ctrl og Skift | Stærk |
-| **Programmet åbner reelt ingen forbindelser under kørsel** | **Ikke observeret endnu** — se nedenfor | **Mangler** |
+| **Programmet åbner ingen forbindelser under kørsel** | Observeret på den installerede 1.3.0 i almindelig brug: **`ws2_32.dll` er aldrig indlæst**, og nul endepunkter over 15 målinger | Stærk — se nedenfor |
 
-Det udgivne program er *self-contained*: hele .NET-kørselsmiljøet ligger med i mappen, og det
-**indeholder** netværksbiblioteker. De bliver bare aldrig kaldt. En kildekodesøgning kan vise, at
-koden ikke kalder dem; den kan ikke i sig selv bevise, at intet sker under kørsel.
+### Kørselsmålingen
 
-Det bevis mangler, og det er billigt at skaffe. Kør luppen i et stykke tid og se efter:
+Målt 2026-09-09 på `C:\Program Files\Skaermlup\Skaermlup.exe` 1.3.0.0, mens programmet havde
+kørt i syv minutter med luppen tændt i normal brug:
+
+| Måling | Resultat |
+|---|---|
+| Indlæste moduler i alt | 140 |
+| `ws2_32.dll` (Winsock) | **Ikke indlæst** |
+| `mswsock.dll` | **Ikke indlæst** |
+| `dnsapi.dll` (navneopslag) | **Ikke indlæst** |
+| `winhttp.dll`, `wininet.dll`, `schannel.dll` | **Ikke indlæst** |
+| TCP-forbindelser, 15 målinger over 60 sekunder | **0** |
+| UDP-endepunkter, 15 målinger over 60 sekunder | **0** |
+
+**Det afgørende er den manglende `ws2_32.dll`.** Et Windows-program kan ikke oprette en TCP-
+eller UDP-forbindelse uden at Winsock er indlæst i processen. At biblioteket aldrig er kommet
+ind, er derfor ikke blot "vi så ingen trafik i det øjeblik vi kiggede" — det er, at der aldrig
+har eksisteret en forbindelse at se.
+
+**Ærligt forbehold — fire `System.Net`-assemblies *er* indlæst:** `System.Net.Primitives`,
+`System.Net.Requests`, `System.Net.WebClient` og `System.Net.WebHeaderCollection`. De kommer fra
+WPF selv, som slår `WebRequest` op i sin håndtering af `pack:`-adresser og billedindlæsning.
+Typerne er altså i hukommelsen. De er bare aldrig brugt til at åbne noget — og det er præcis
+det, den manglende Winsock beviser. Havde en af dem været taget i brug, ville `ws2_32.dll` have
+været der.
+
+Målingen gentages sådan her:
 
 ```powershell
 $p = Get-Process Skaermlup
+($p.Modules | ForEach-Object { (Split-Path $_.FileName -Leaf).ToLower() }) -contains 'ws2_32.dll'
 Get-NetTCPConnection -OwningProcess $p.Id -ErrorAction SilentlyContinue
 Get-NetUDPEndpoint  -OwningProcess $p.Id -ErrorAction SilentlyContinue
 ```
 
-Begge skal give tomt. Skal det stå stærkere over for en indkøbsafdeling, så lad en udgående
-firewall-regel blokere `Skaermlup.exe` og bekræft, at programmet fungerer uændret — det er den
-form for dokumentation, der bliver bedt om i et udbud.
+Første linje skal give `False`, de to sidste tomt. Skal det stå endnu stærkere over for en
+indkøbsafdeling, så lad en udgående firewall-regel blokere `Skaermlup.exe` og bekræft, at
+programmet fungerer uændret.
 
 ## A.6 Sådan efterprøves hele del A
 
@@ -284,14 +312,15 @@ små, er der ingenting at haste med senere.
 |---|---|---|---|
 | **G1** | **Installeren er ikke kodesigneret** | Brugeren kan ikke se, om filen er ægte, og SmartScreen advarer ved hver installation. En bruger med AMD, der er blevet lært at klikke advarsler væk, er en sikkerhedsrisiko i sig selv. Rammer NIS2-forsyningskæde, CRA og A.8.25 på én gang | Køb af certifikat. Byggeriet er klar via `-CertificateThumbprint` |
 | **G2** | **Prøvebilleder kan indeholde alt** | Se A.3. Brugeren kan i sagens natur ikke altid læse, hvad billedet viser, før det sendes | Lille |
-| **G3** | **Ingen advarsel på skærmen ved `--proevebillede`** | Følger af G2. Der bør stå tydeligt: *"Billedet viser, hvad der stod på skærmen. Se det igennem, før du sender det."* — og gerne åbne mappen bagefter | Én dialog. En eftermiddag |
+| ~~**G3**~~ | ~~Ingen advarsel på skærmen ved `--proevebillede`~~ | **Lukket.** Efter et prøvebillede vises et vindue i programmets egen skriftstørrelse: billederne viser hvad der stod på skærmen, se dem igennem før de sendes. Knap der åbner mappen. Teksterne ligger i `SampleWarning` og er dækket af tests | Gjort |
 | **G4** | **Ingen kanal til at melde sårbarheder** | Første spørgsmål i ethvert offentligt udbud. En `SECURITY.md` med en adresse og en svarfrist rækker | En time |
 | **G5** | **Ingen SBOM** | CRA vil kræve den. Med én afhængighed er den triviel at lave | En time |
-| **G6** | **Kørselsobservation mangler** | Se A.5. Den sidste brik i "ingen data forlader maskinen" | Ti minutter |
+| ~~**G6**~~ | ~~Kørselsobservation mangler~~ | **Lukket.** Målt på den installerede 1.3.0: `ws2_32.dll` aldrig indlæst, nul endepunkter. Se A.5 | Gjort |
 | **G7** | **Ingen skreven trusselsmodel** | Dette dokument er den halve vej. Den anden halvdel er "hvem kunne finde på at angribe det her, og hvordan" | En eftermiddag |
 
-G1 er den eneste, der koster penge. G3, G4, G5 og G6 kan laves på under en dag tilsammen og
-lukker det meste af det, en indkøbsafdeling spørger om.
+G1 er den eneste, der koster penge. Af de resterende kan G4 og G5 laves på en time hver.
+G2 er ikke et hul der kan lukkes — et prøvebillede *skal* vise skærmen for at være til
+nogen nytte — men G3 gør risikoen synlig for den, der løber den.
 
 ## B.6 Hvad man svarer i et udbud
 
@@ -319,4 +348,4 @@ Dette dokument er kun sandt for den commit, det står i. Det skal gennemgås nå
 - `efterproev-dataflow.ps1` fejler
 - der overhovedet kommer noget netværk i programmet — så skal hele del A skrives om
 
-Sidst efterprøvet mod koden: 2026-09-09, Skærmlup 1.3.0.
+Sidst efterprøvet mod koden: 2026-09-09, Skærmlup 1.3.0 plus advarslen ved prøvebilleder.

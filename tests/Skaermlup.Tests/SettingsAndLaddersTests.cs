@@ -154,3 +154,31 @@ public class YellowTonesTests
         }
     }
 }
+
+public class SampleWarningTests
+{
+    [Fact]
+    public void Advarslen_har_tekst_i_alle_felter()
+    {
+        SampleWarning.Title.ShouldNotBeNullOrWhiteSpace();
+        SampleWarning.Headline.ShouldNotBeNullOrWhiteSpace();
+        SampleWarning.Subheadline.ShouldNotBeNullOrWhiteSpace();
+        SampleWarning.FolderHeading.ShouldNotBeNullOrWhiteSpace();
+        SampleWarning.FileHeading.ShouldNotBeNullOrWhiteSpace();
+        SampleWarning.NoFiles.ShouldNotBeNullOrWhiteSpace();
+        SampleWarning.OpenFolder.ShouldNotBeNullOrWhiteSpace();
+        SampleWarning.Close.ShouldNotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public void Advarslen_siger_hvad_billedet_indeholder_og_hvad_man_skal_goere()
+    {
+        // Den her advarsel har ét job. Bliver teksten skrevet om til noget venligt og vagt,
+        // skal testen sige fra: den skal nævne skærmen, og den skal bede om at se efter.
+        string alt = string.Join(' ', SampleWarning.Body);
+
+        alt.ShouldContain("skærm", Case.Insensitive);
+        alt.ShouldContain("send", Case.Insensitive);
+        SampleWarning.Body.Count.ShouldBeGreaterThanOrEqualTo(2);
+    }
+}
