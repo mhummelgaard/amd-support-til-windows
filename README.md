@@ -155,6 +155,7 @@ Skaermlup.Desktop  ──►  Skaermlup.Core
 | `src/Skaermlup.Core` | Geometri, forstørrelsestrin, farvefiltre, museudløser, indstillinger, alle tekster. Ingen afhængigheder — derfor testbart. |
 | `src/Skaermlup.Desktop` | WPF-vinduer, skærmkopiering, globale muse- og tastaturlyttere. |
 | `tests/Skaermlup.Tests` | 191 enhedstests af kernen. |
+| `docs/` | [Dataflow og compliance](docs/dataflow-og-compliance.md) — hver datastrøm sporet, og hvad den betyder for GDPR, NIS2, ISO og CRA. |
 
 ### Sådan vises billedet
 
