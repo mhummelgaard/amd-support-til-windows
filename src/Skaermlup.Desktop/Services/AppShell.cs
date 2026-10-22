@@ -31,6 +31,7 @@ internal sealed class AppShell : IDisposable
     private readonly DispatcherTimer _saveTimer;
 
     private InstructionBar? _bar;
+    private TrayIcon? _tray;
     private MainWindow? _panel;
     private HelpWindow? _help;
     private bool _disposed;
@@ -94,6 +95,8 @@ internal sealed class AppShell : IDisposable
 
         _hotkeys.Command += (_, command) => Execute(command);
         _hotkeys.Install();
+
+        _tray = new TrayIcon(this);
 
         _instructionTimer.Start();
         RefreshInstructions();
@@ -345,6 +348,8 @@ internal sealed class AppShell : IDisposable
         _mouse.Wheel -= OnMouseWheel;
         _mouse.Dispose();
         _hotkeys.Dispose();
+        _tray?.Dispose();
+        _tray = null;
         Magnifier.Dispose();
 
         _bar?.Close();

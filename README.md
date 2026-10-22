@@ -33,6 +33,7 @@ der ændrer det.
 | **Ctrl + Alt + B** | Skift mellem lup og læsebånd. |
 | **Ctrl + Alt + H** | Vis eller skjul vejledningsbjælken. |
 | **Ctrl + Alt + S** | Åbn kontrolpanelet. |
+| **Ikonet ved uret** | Klik: kontrolpanelet. Højreklik: tænd og sluk, vejledning, afslut. På Windows 11 ligger det først bag "^" og skal trækkes frem én gang. |
 | **Ctrl + Alt + piletaster** | Flyt luppen uden mus. |
 
 Alle genveje står ét sted i koden — [`Shortcuts.cs`](src/Skaermlup.Core/Text/Shortcuts.cs) — og

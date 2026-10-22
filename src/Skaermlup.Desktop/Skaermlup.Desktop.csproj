@@ -6,6 +6,13 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <!-- Kun til ikonet ved uret, som WPF ikke selv har. En del af den samme .NET-pakke —
+         ingen ekstra afhængighed. -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <!-- WFO0003 råder Windows Forms-programmer til at sætte DPI i koden frem for i manifestet.
+         Det her er et WPF-program, og luppen regner i rigtige skærmpixels: DPI skal være på plads,
+         før det første vindue findes, og det er netop hvad manifestet sikrer. -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
     <!-- Skærmbilledet kopieres direkte fra en DIB-buffer over i visningen. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- Byg med -p:UiAccess=true for en signeret udgave der maa ligge oven paa Start-menuen. -->
@@ -19,6 +26,13 @@
     <Company>Michael Hummelgaard</Company>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Windows Forms ville ellers importere sine navne i alle filer, og de støder sammen med
+         WPF's: Application, Button, MessageBox. Den ene fil, der bruger dem, siger det selv. -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Skaermlup.Core\Skaermlup.Core.csproj" />
