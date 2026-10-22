@@ -100,6 +100,22 @@
                         </ItemsControl>
                         <TextBlock Style="{StaticResource Hint}" Margin="0,8,0,0"
                                    Text="Luk-knappen (X) lukker kun dette vindue. Luppen kører videre, og Ctrl + Alt + S åbner vinduet igen."/>
+
+                        <!-- Vælg knappen ved at trykke på den. Står her, fordi det er her man opdager,
+                             at ens mus ikke har en midterste knap — på en bærbar fx. -->
+                        <TextBlock Style="{StaticResource Body}" FontSize="22" FontWeight="Bold" Margin="0,16,0,0"
+                                   Text="{Binding TriggerSetupMessage}" local:SpokenValue.Announce="True"
+                                   Visibility="{Binding HasTriggerSetupMessage, Converter={StaticResource Vis}}"/>
+                        <WrapPanel Margin="0,14,0,0"
+                                   Visibility="{Binding ShowTriggerSetupButtons, Converter={StaticResource Vis}}">
+                            <Button Content="Vælg knap ved at trykke på den" Margin="0,0,14,10"
+                                    Command="{Binding LearnTriggerCommand}"/>
+                            <Button Content="Min mus har ingen midterste knap" Margin="0,0,0,10"
+                                    Command="{Binding UseChordCommand}"/>
+                        </WrapPanel>
+                        <Button Content="Annullér" HorizontalAlignment="Left" Margin="0,14,0,0"
+                                Command="{Binding CancelLearnTriggerCommand}"
+                                Visibility="{Binding IsLearningTrigger, Converter={StaticResource Vis}}"/>
                     </StackPanel>
                 </Border>
 

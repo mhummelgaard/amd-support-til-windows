@@ -23,7 +23,10 @@ internal sealed class AppShell : IDisposable
 
     // Bruges fra både musens lyttertråd og hovedtråden, så adgangen går gennem en lås.
     private readonly MouseTriggerDetector _trigger = new();
+    private readonly TriggerLearner _learner = new();
     private readonly object _triggerLock = new();
+    private bool _learning;
+    private readonly DispatcherTimer _learnTimer;
 
     private readonly HookWatchdog _hookWatchdog = new();
     private readonly DispatcherTimer _hookTimer;
@@ -64,6 +67,10 @@ internal sealed class AppShell : IDisposable
             Interval = TimeSpan.FromSeconds(2),
         };
         _hookTimer.Tick += (_, _) => CheckMouseHook();
+
+        // Har man ikke trykket inden da, er man nok i tvivl. Så siges det, og intet er ændret.
+        _learnTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(20) };
+        _learnTimer.Tick += (_, _) => CancelLearningTrigger(TriggerSetup.TimedOut);
     }
 
     public AppSettings Settings { get; }
@@ -116,6 +123,19 @@ internal sealed class AppShell : IDisposable
         TriggerDecision decision;
         lock (_triggerLock)
         {
+            // Mens brugeren vælger en ny knap, er et tryk et valg — ikke et tænd eller sluk.
+            if (_learning)
+            {
+                var step = _learner.Observe(new MouseButtonEvent(e.Button, e.IsDown, e.TimestampMs));
+                e.Swallow = step.Swallow;
+                if (step.Learned is { } learned)
+                {
+                    _learning = false;
+                    _dispatcher.BeginInvoke(() => ApplyLearnedTrigger(learned));
+                }
+                return;
+            }
+
             _trigger.Buttons = Settings.Trigger;
             _trigger.Mode = Settings.TriggerMode;
             _trigger.BlockTriggerClicks = Settings.BlockTriggerClicks;
@@ -156,6 +176,62 @@ internal sealed class AppShell : IDisposable
 
             SaveSoon();
         });
+    }
+
+    // ---------- Vælg knappen ved at trykke på den ----------
+
+    /// <summary>Sandt mens programmet venter på, at brugeren trykker på sin nye udløserknap.</summary>
+    public bool IsLearningTrigger
+    {
+        get { lock (_triggerLock) return _learning; }
+    }
+
+    /// <summary>Hvad der skal stå om knapvalget lige nu — eller null, når der intet er at sige.</summary>
+    public string? TriggerSetupMessage { get; private set; }
+
+    public event EventHandler? TriggerSetupChanged;
+
+    public void StartLearningTrigger()
+    {
+        lock (_triggerLock)
+        {
+            _learner.Reset();
+            _learning = true;
+        }
+
+        TriggerSetupMessage = TriggerSetup.Waiting;
+        _learnTimer.Stop();
+        _learnTimer.Start();
+        TriggerSetupChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void CancelLearningTrigger(string message)
+    {
+        lock (_triggerLock) _learning = false;
+
+        _learnTimer.Stop();
+        TriggerSetupMessage = message;
+        TriggerSetupChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>For mus uden midterste knap: venstre og højre trykket samtidig.</summary>
+    public void UseLeftRightChord()
+    {
+        CancelLearningTrigger(TriggerSetup.ChordChosen);
+        Settings.Trigger = MouseTriggerButtons.Middle | MouseTriggerButtons.LeftRightChord;
+        SettingsChanged();
+    }
+
+    private void ApplyLearnedTrigger(MouseTriggerButtons button)
+    {
+        _learnTimer.Stop();
+
+        // Den valgte knap erstatter de andre. Én knap er lettest at huske.
+        Settings.Trigger = button;
+        SettingsChanged();
+
+        TriggerSetupMessage = TriggerSetup.Learned(button);
+        TriggerSetupChanged?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>
@@ -342,6 +418,7 @@ internal sealed class AppShell : IDisposable
 
         _instructionTimer.Stop();
         _hookTimer.Stop();
+        _learnTimer.Stop();
         _saveTimer.Stop();
 
         _mouse.Button -= OnMouseButton;

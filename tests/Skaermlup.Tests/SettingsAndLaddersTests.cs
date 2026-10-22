@@ -221,3 +221,17 @@ public class ConfirmationsTests
         udenWindows.ShouldContain("Start-menuen");
     }
 }
+
+public class TriggerSetupTests
+{
+    [Theory]
+    [InlineData(MouseTriggerButtons.Middle, "midterste museknap")]
+    [InlineData(MouseTriggerButtons.SideBack, "bageste sideknap")]
+    [InlineData(MouseTriggerButtons.SideForward, "forreste sideknap")]
+    public void Beskeden_siger_hvilken_knap_der_nu_taender_luppen(MouseTriggerButtons button, string spoken)
+        => TriggerSetup.Learned(button).ShouldBe("Nu tænder " + spoken + " luppen.");
+
+    [Fact]
+    public void Udloeber_tiden_faar_brugeren_at_vide_hvad_de_saa_kan_goere()
+        => TriggerSetup.TimedOut.ShouldContain("Ctrl + Alt + L");
+}

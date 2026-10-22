@@ -28,7 +28,27 @@ internal sealed partial class ControlPanelViewModel : ObservableObject
 
         _shell.Magnifier.Changed += (_, _) => RefreshAll();
         _shell.MouseTriggerHealthChanged += (_, _) => RefreshAll();
+        _shell.TriggerSetupChanged += (_, _) => RefreshAll();
     }
+
+    // ---------- Vælg knappen ved at trykke på den ----------
+
+    public bool IsLearningTrigger => _shell.IsLearningTrigger;
+
+    public bool ShowTriggerSetupButtons => !_shell.IsLearningTrigger;
+
+    public string? TriggerSetupMessage => _shell.TriggerSetupMessage;
+
+    public bool HasTriggerSetupMessage => !string.IsNullOrEmpty(_shell.TriggerSetupMessage);
+
+    [RelayCommand]
+    private void LearnTrigger() => _shell.StartLearningTrigger();
+
+    [RelayCommand]
+    private void CancelLearnTrigger() => _shell.CancelLearningTrigger(TriggerSetup.Cancelled);
+
+    [RelayCommand]
+    private void UseChord() => _shell.UseLeftRightChord();
 
     private AppSettings S => _shell.Settings;
 
