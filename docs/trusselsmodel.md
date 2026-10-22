@@ -58,6 +58,13 @@ udgivelser bærer commit-id i `ProductVersion`. Det hjælper en IT-afdeling. Det
 *Det der skal til:* kodesignering (G1). Den vigtigste sikkerhedsopgave i projektet, og den
 eneste der koster penge frem for arbejde.
 
+*Hvad det hjemmelavede certifikat ikke gør:* `installer/opret-selvsigneret-certifikat.ps1` laver
+et signeringscertifikat efter samme metode som ESDH PDS — en rod, der stempler ét certifikat og
+derefter mister sin nøgle. Det giver uiAccess på de maskiner, hvor roden er installeret. **Det
+gør intet ved T1.** Andre maskiner kender ikke roden, og at bede fremmede installere en
+hjemmelavet rod er præcis den slags, en svindler ville bede om. Den må aldrig sendes ud til
+brugere.
+
 ### T2 — Kør lige den her kommando og send mig billederne · **Høj** · delvist afværget
 
 **A1.** Svindleren ringer, udgiver sig for support, og får brugeren til at køre

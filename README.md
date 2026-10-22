@@ -207,11 +207,28 @@ pwsh installer/build-installer.ps1 -CertificateThumbprint <aftryk>
 
 Uden `-CertificateThumbprint` bygges den almindelige udgave, som går ind bag Start-menuen.
 Den udgave har til gengæld en ring om musen i stedet — se næste afsnit.
-Har man ikke et rigtigt certifikat, kan man lave et til sin egen maskine med
-`installer/opret-selvsigneret-certifikat.ps1` — læs advarslen i toppen af scriptet først, for
-det lægger et rodcertifikat ind i maskinens betroede liste. Skal programmet deles med andre,
-er det et rigtigt certifikat fra en udsteder der skal bruges; så slipper modtagerne også for
-SmartScreen-advarslen.
+Har man ikke et rigtigt certifikat, kan man lave et til de maskiner, man selv har hånd om, med
+samme metode som ESDH PDS bruger til sit prøvecertifikat:
+
+```bash
+pwsh installer/opret-selvsigneret-certifikat.ps1 -Proeve
+```
+
+`-Proeve` gør det hele i brugerens eget lager, efterprøver kæden, signerer en prøvefil og
+rydder op igen — uden at røre maskinens tillid. Virker det, køres scriptet som administrator
+uden `-Proeve`.
+
+Scriptet laver en **rod**, der stempler præcis ét certifikat — Skærmlups, kun til kodesignering
+— og derefter **får sin hemmelige nøgle slettet**. En betroet rod, der stadig kan stemple, kunne
+udstede et certifikat til et hvilket som helst websted, og maskinen ville tro på det. Denne kan
+aldrig stemple igen. Signeringscertifikatets egen nøgle kan ikke eksporteres, og selv i de
+forkerte hænder kan den kun signere programmer — ikke udstede noget. Rodens offentlige del gemmes
+i `installer\out`, så den kan installeres på en anden pc, man selv har hånd om.
+
+Det løser uiAccess på de maskiner. **Det løser ikke SmartScreen hos andre**, for de kender ikke
+roden — og en hjemmelavet rod, som fremmede bliver bedt om at installere, ville være et værre hul
+end det, den lukker. Skal programmet ud til brugere, er det et rigtigt certifikat fra en udsteder
+der skal til. Se T1 i [trusselsmodellen](docs/trusselsmodel.md).
 
 ### Når luppen ikke kan komme til
 

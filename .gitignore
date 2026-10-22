@@ -26,6 +26,11 @@ coverage*.xml
 *.coverage
 *.trx
 
+# Lokale hjælpescripts til at starte byg og test uden en terminal.
+# Hører ikke til projektet — slet dem frit.
+installer/koer-*.cmd
+installer/byg-*.cmd
+
 # Støj fra styresystemet
 Thumbs.db
 Desktop.ini
