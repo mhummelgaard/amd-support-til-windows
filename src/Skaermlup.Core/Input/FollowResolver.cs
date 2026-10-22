@@ -7,19 +7,25 @@ public enum FocusSource
     Mouse,
     Caret,
     Keyboard,
+
+    /// <summary>Det felt tastaturet står i — en knap, et afkrydsningsfelt, en række i en liste.</summary>
+    Focus,
 }
 
 /// <summary>
 /// Bestemmer hvilket punkt luppen skal stå på. Musen har altid forkørselsret; skriver brugeren
 /// i stedet, følger luppen tekstmarkøren, så bogstaverne kommer frem efterhånden som de skrives.
-/// Pilene på tastaturet kan overtage styringen helt, for dem der ikke bruger mus.
+/// Flytter brugeren rundt med Tab, følger luppen det felt tastaturet står i. Pilene på
+/// tastaturet kan overtage styringen helt, for dem der ikke bruger mus.
 /// </summary>
 public sealed class FollowResolver
 {
     private PixelPoint _mouseAnchor;
     private PixelPoint _caretAnchor;
+    private PixelPoint _focusAnchor;
     private PixelPoint _keyboardPoint;
     private PixelPoint _current;
+    private PixelRect? _lastFocus;
     private bool _seeded;
 
     /// <summary>Hvor langt musen skal flytte sig for at overtage styringen igen.</summary>
@@ -27,13 +33,18 @@ public sealed class FollowResolver
 
     public bool FollowCaret { get; set; } = true;
 
+    public bool FollowFocus { get; set; } = true;
+
     public FocusSource Source { get; private set; } = FocusSource.Mouse;
 
     public PixelPoint Current => _current;
 
     /// <param name="mouse">Musens nuværende placering.</param>
     /// <param name="caret">Tekstmarkørens rektangel, hvis der er en. Ellers null.</param>
-    public PixelPoint Resolve(PixelPoint mouse, PixelRect? caret)
+    /// <param name="focus">
+    /// Feltet tastaturet står i, hvis det er til nogen hjælp (se <see cref="FocusFilter"/>). Ellers null.
+    /// </param>
+    public PixelPoint Resolve(PixelPoint mouse, PixelRect? caret, PixelRect? focus = null)
     {
         if (!_seeded)
         {
@@ -41,8 +52,17 @@ public sealed class FollowResolver
             _mouseAnchor = mouse;
             _keyboardPoint = mouse;
             _current = mouse;
+
+            // Det felt der havde fokus, da luppen blev tændt, er ikke en bevægelse. Luppen
+            // starter ved musen.
+            _lastFocus = focus;
             return _current;
         }
+
+        // Et nyt fokusfelt bemærkes én gang, uanset hvem der vinder i denne omgang. Ellers ville
+        // et fokusskift, som musen eller skrivemarkøren overtrumfede, springe frem senere.
+        bool focusMoved = FollowFocus && focus is { IsEmpty: false } && focus != _lastFocus;
+        _lastFocus = focus;
 
         int wake = Math.Max(1, MouseWakeDistancePx);
         if (mouse.DistanceSquaredTo(_mouseAnchor) >= wake * wake)
@@ -74,14 +94,28 @@ public sealed class FollowResolver
         }
         else if (Source == FocusSource.Caret)
         {
-            // Tekstmarkøren forsvandt (fx feltet mistede fokus) — musen tager over igen.
+            // Tekstmarkøren forsvandt (fx feltet mistede fokus) — musen tager over igen,
+            // medmindre fokus er flyttet til et nyt felt. Så følges det herunder.
             Source = FocusSource.Mouse;
+        }
+
+        // Et klik flytter også fokus — til det man klikkede på. Står musen inde i det nye felt,
+        // er det musen der har gjort det, og så bliver luppen ved musen. Ellers ville hvert klik
+        // trække luppen hen til midten af den knap, man lige havde ramt.
+        if (focusMoved && focus is { } field && !field.Contains(mouse))
+        {
+            _focusAnchor = FocusFilter.Target(field);
+            _keyboardPoint = _focusAnchor;
+            Source = FocusSource.Focus;
+            _current = _focusAnchor;
+            return _current;
         }
 
         _current = Source switch
         {
             FocusSource.Keyboard => _keyboardPoint,
             FocusSource.Caret => _caretAnchor,
+            FocusSource.Focus => _focusAnchor,
             _ => _mouseAnchor,
         };
         return _current;

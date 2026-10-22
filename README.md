@@ -117,8 +117,10 @@ rammer præcis den valgte gule og alt derunder følger med ned mod sort i samme 
 mellem kanalerne er dermed det samme hele vejen, og en blød bogstavkant skifter ikke farve på vej
 mod bunden.
 
-**Luppen følger skrivemarkøren.** Skriver man i et tekstfelt, flytter luppen med — indtil musen
-røres, for musen har altid forkørselsret. Piletasterne kan flytte luppen helt uden mus.
+**Luppen følger skrivemarkøren og tastaturet.** Skriver man i et tekstfelt, flytter luppen med — indtil
+musen røres, for musen har altid forkørselsret. Flytter man rundt med Tab, følger luppen det felt, der
+får fokus: knapper, afkrydsningsfelter, rækker i en liste. Et klik flytter også fokus, men da står
+musen jo allerede dér, og luppen bliver hos musen. Piletasterne kan flytte luppen helt uden mus.
 
 **Kontrolpanelet er selv til at læse.** Brødtekst på 20 punkter, knapper på mindst 56 pixels,
 afkrydsningsfelter tegnet forfra i en størrelse der kan ses, og plus/minus-knapper i stedet for

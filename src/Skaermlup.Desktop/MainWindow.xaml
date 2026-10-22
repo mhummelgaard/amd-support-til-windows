@@ -275,6 +275,8 @@
                         <TextBlock Style="{StaticResource H2}" Text="Læsning"/>
                         <CheckBox IsChecked="{Binding FollowCaret, Mode=TwoWay}"
                                   Content="Følg skrivemarkøren, når jeg skriver"/>
+                        <CheckBox IsChecked="{Binding FollowFocus, Mode=TwoWay}"
+                                  Content="Følg tastaturet, når jeg flytter rundt med Tab"/>
                     </StackPanel>
                 </Border>
 

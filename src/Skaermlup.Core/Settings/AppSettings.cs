@@ -73,6 +73,12 @@ public sealed class AppSettings
 
     public bool FollowCaret { get; set; } = true;
 
+    /// <summary>
+    /// Luppen følger det felt tastaturet står i, når brugeren flytter rundt med Tab — knapper,
+    /// afkrydsningsfelter, rækker i en liste. Tekstfelter følges allerede af skrivemarkøren.
+    /// </summary>
+    public bool FollowFocus { get; set; } = true;
+
     public bool ShowInstructions { get; set; } = true;
 
     public InstructionPlacement InstructionsAt { get; set; } = InstructionPlacement.Bottom;

@@ -143,6 +143,7 @@ public static class Instructions
         new("Uden mus", [
             new InstructionChip(Shortcuts.DisplayFor(AppCommand.PanLeft), "flytter luppen skridt for skridt"),
             new InstructionChip("Skriv i et tekstfelt", "luppen følger selv skrivemarkøren"),
+            new InstructionChip("Tab", "luppen følger med fra felt til felt"),
         ]),
         new("Vejledningen på skærmen", [
             new InstructionChip(Shortcuts.DisplayFor(AppCommand.ToggleInstructions), "viser eller skjuler bjælken med vejledningen"),

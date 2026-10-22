@@ -264,6 +264,12 @@ internal sealed partial class ControlPanelViewModel : ObservableObject
         set => Set(value, s => s.FollowCaret, (s, v) => s.FollowCaret = v);
     }
 
+    public bool FollowFocus
+    {
+        get => S.FollowFocus;
+        set => Set(value, s => s.FollowFocus, (s, v) => s.FollowFocus = v);
+    }
+
     public bool MarkerIsCrosshair
     {
         get => S.Marker == MarkerStyle.Crosshair;
@@ -432,6 +438,7 @@ internal sealed partial class ControlPanelViewModel : ObservableObject
         to.BlockTriggerClicks = from.BlockTriggerClicks;
         to.Wheel = from.Wheel;
         to.FollowCaret = from.FollowCaret;
+        to.FollowFocus = from.FollowFocus;
         to.ShowInstructions = from.ShowInstructions;
         to.InstructionsAt = from.InstructionsAt;
         to.InstructionScale = from.InstructionScale;

@@ -22,6 +22,7 @@ internal sealed class MagnifierService : IDisposable
     private readonly AppSettings _settings;
     private readonly ScreenCapture _capture = new();
     private readonly SystemCursor _cursor = new();
+    private readonly FocusTracker _focus = new();
     private readonly DispatcherTimer _timer = new(DispatcherPriority.Render);
 
     /// <summary>
@@ -89,7 +90,8 @@ internal sealed class MagnifierService : IDisposable
 
         // Ny sporing hver gang, så luppen starter dér hvor musen er — ikke hvor den
         // stod sidst luppen var tændt.
-        _follow = new FollowResolver { FollowCaret = _settings.FollowCaret };
+        _follow = new FollowResolver { FollowCaret = _settings.FollowCaret, FollowFocus = _settings.FollowFocus };
+        if (_settings.FollowFocus) _focus.Start();
 
         _lens ??= new LensWindow();
         _lens.Show();
@@ -116,6 +118,7 @@ internal sealed class MagnifierService : IDisposable
 
         _timer.Stop();
         IsActive = false;
+        _focus.Stop();
         _lens?.Hide();
         _cursor.Show();
         _pointer = PointerVisual.System;
@@ -131,6 +134,9 @@ internal sealed class MagnifierService : IDisposable
         RebuildColorMap();
         UpdateSystemCursor();
         _follow.FollowCaret = _settings.FollowCaret;
+        _follow.FollowFocus = _settings.FollowFocus;
+        if (IsActive && _settings.FollowFocus) _focus.Start();
+        else _focus.Stop();
         if (IsActive) RenderOnce();
         Changed?.Invoke(this, EventArgs.Empty);
     }
@@ -319,7 +325,10 @@ internal sealed class MagnifierService : IDisposable
         if (!IsActive || _lens is null) return;
 
         var caret = _settings.FollowCaret ? CaretProbe.TryGetCaretRect() : null;
-        var focus = _follow.Resolve(ScreenInfo.CursorPosition(), caret);
+        var field = _settings.FollowFocus && _focus.Current is { } f
+            ? FocusFilter.Useful(f, ScreenInfo.MonitorAt(f.Center))
+            : null;
+        var focus = _follow.Resolve(ScreenInfo.CursorPosition(), caret, field);
         var monitor = ScreenInfo.MonitorAt(focus);
         ActiveMonitor = monitor;
 
@@ -350,5 +359,6 @@ internal sealed class MagnifierService : IDisposable
         _lens = null;
         _capture.Dispose();
         _cursor.Dispose();
+        _focus.Dispose();
     }
 }

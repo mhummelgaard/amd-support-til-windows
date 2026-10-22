@@ -40,7 +40,7 @@ tjeneste.
 
 ## A.1 Datafortegnelse
 
-Ti datastrømme. Kolonnen **Forlader maskinen** er den eneste, der for alvor betyder noget.
+Elleve datastrømme. Kolonnen **Forlader maskinen** er den eneste, der for alvor betyder noget.
 
 | # | Data | Hvor det kommer fra | Hvad der sker med det | Hvor det ender | Levetid | Forlader maskinen |
 |---|---|---|---|---|---|---|
@@ -54,6 +54,7 @@ Ti datastrømme. Kolonnen **Forlader maskinen** er den eneste, der for alvor bet
 | **D8** | Statusfil | Programmet og Windows | Version, tidspunkt, OS-version, skærmgeometri, om museknap og genveje virker, sti til indstillinger | `%LocalAppData%\Skaermlup\diagnostik.txt` | Overskrives ved hver opstart | **Nej** |
 | **D9** | Autostart | Brugerens eget tilvalg | Strengværdi med programstien | `HKCU\...\CurrentVersion\Run\Skaermlup` | Til fravalg eller afinstallation | **Nej** |
 | **D10** | **Prøvebilleder til support** | Brugeren kører `--proevebillede=<mappe>` | Vinduerne tegner sig selv til PNG | En mappe **brugeren selv angiver** | Til brugeren sletter dem | **Kun hvis brugeren selv sender dem videre** |
+| **D11** | **Hvor tastaturets fokus er** — kun placeringen af feltet | UI Automation: Windows' svar på hvilket felt der har fokus, og dets rektangel | Luppen følger med, når brugeren flytter rundt med Tab | Ikke gemt | Til næste fokusskift. Kun mens luppen er tændt — slukket lyttes der slet ikke | **Nej** |
 
 Kildehenvisninger: D1 [`ScreenCapture.cs`](../src/Skaermlup.Desktop/Capture/ScreenCapture.cs),
 [`ColorPipeline.cs`](../src/Skaermlup.Core/Colors/ColorPipeline.cs) ·
@@ -66,6 +67,12 @@ D8 [`AppShell.cs`](../src/Skaermlup.Desktop/Services/AppShell.cs) ·
 D9 [`StartupRegistration.cs`](../src/Skaermlup.Desktop/Services/StartupRegistration.cs) ·
 D10 [`DiagnosticImages.cs`](../src/Skaermlup.Desktop/Services/DiagnosticImages.cs),
 [`SampleRequest.cs`](../src/Skaermlup.Desktop/Services/SampleRequest.cs)
+· D11 [`FocusTracker.cs`](../src/Skaermlup.Desktop/Interop/FocusTracker.cs)
+
+D11 kommer fra samme kilde som Windows' egen Forstørrelse og Oplæser. Programmet spørger kun om
+*hvor* feltet er — aldrig hvad det hedder, og aldrig hvad der står i det, heller ikke i et
+adgangskodefelt. Det håndhæves af `efterproev-dataflow.ps1`, der fejler hvis koden begynder at
+læse mere end placeringen.
 
 ## A.2 Tillidsgrænser
 
@@ -82,7 +89,7 @@ flowchart TB
         skaerm["Skærmen"] -->|"D1 billedpunkter"| capture
         vis -->|"tegnes på"| skaerm
         mus["Mus og modifikationstaster"] -->|"D2 D3"| proces
-        vindue["Aktivt vindue<br/>markør, klasse, procesfil"] -->|"D4 D5"| proces
+        vindue["Aktivt vindue<br/>markør, fokus, klasse, procesfil"] -->|"D4 D5 D11"| proces
 
         proces -->|"D6 D7 D8"| appdata["Mappe under %LocalAppData%"]
         proces -->|"D9 tilvalgt"| reg["Autostart under HKCU"]

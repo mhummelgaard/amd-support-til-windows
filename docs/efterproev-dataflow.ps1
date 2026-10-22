@@ -104,6 +104,12 @@ Test-Paastand 'Programmet starter kun stifinderen, og kun fra advarselsvinduet' 
         ForEach-Object { "$($_.Filename):$($_.LineNumber)  $($_.Line.Trim())" }
 }
 
+Test-Paastand 'UI Automation laeser kun hvor et felt er, aldrig navn eller indhold (D11)' {
+    $cs | Where-Object { (Get-Content $_.FullName -Raw) -match 'System\.Windows\.Automation' } |
+        Select-String -Pattern '\.Current\.(?!BoundingRectangle\b)\w+|TextPattern|ValuePattern|LegacyIAccessible|SelectionPattern|\.GetText\(' |
+        ForEach-Object { "$($_.Filename):$($_.LineNumber)  $($_.Line.Trim())" }
+}
+
 Write-Host ''
 if ($fejl -gt 0) {
     Write-Host "$fejl paastand(e) holder ikke laengere. Ret docs/dataflow-og-compliance.md i samme commit." -ForegroundColor Red

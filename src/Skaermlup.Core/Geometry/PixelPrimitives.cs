@@ -31,6 +31,9 @@ public readonly record struct PixelRect(int X, int Y, int Width, int Height)
     public PixelSize Size => new(Width, Height);
     public PixelPoint Center => new(X + Width / 2, Y + Height / 2);
 
+    public bool Contains(PixelPoint point)
+        => point.X >= X && point.X < Right && point.Y >= Y && point.Y < Bottom;
+
     public static PixelRect FromBounds(int left, int top, int right, int bottom)
         => new(left, top, Math.Max(0, right - left), Math.Max(0, bottom - top));
 

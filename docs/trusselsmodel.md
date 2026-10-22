@@ -18,6 +18,7 @@ opgaven kræver:
 | Lavniveaukrog på musen for hele systemet | Ellers kan luppen ikke tændes med en knap | Hvor brugeren klikker, og hvornår |
 | Kan starte med Windows | Så luppen er der, når brugeren har brug for den | Fodfæste der overlever genstart |
 | Skjuler sit eget vindue for skærmkopiering | Så luppen ikke fylder i en Teams-deling | Et vindue der ikke ses i en fjernsupport-session |
+| Ved hvilket felt tastaturet står i, i alle programmer | Så luppen kan følge med, når man flytter rundt med Tab | Hvilket felt brugeren er i. Kun hvor det er — navn og indhold læses aldrig, og det håndhæves af en kontrol (D11) |
 
 Programmet gør intet af det ondsindet — det er sporet og efterprøvet i
 [del A af dataflowdokumentet](dataflow-og-compliance.md). **Men netop derfor er selve
