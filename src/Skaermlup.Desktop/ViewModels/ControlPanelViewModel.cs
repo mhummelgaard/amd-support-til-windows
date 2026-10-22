@@ -137,7 +137,36 @@ internal sealed partial class ControlPanelViewModel : ObservableObject
     public IReadOnlyList<ColorOption> ColorOptions => _colorOptions;
 
     private void SelectColors(ColorScheme scheme)
-        => Set(scheme, s => s.Colors, (s, v) => s.Colors = v, nameof(ColorOptions));
+    {
+        Set(scheme, s => s.Colors, (s, v) => s.Colors = v, nameof(ColorOptions));
+        OnPropertyChanged(nameof(ShowYellowTone));
+    }
+
+    /// <summary>Den gule tone vises kun, når en gul tilstand er valgt. Ellers gør den ingen forskel.</summary>
+    public bool ShowYellowTone => S.Colors is ColorScheme.YellowOnBlack or ColorScheme.BlackOnYellow;
+
+    // ---------- Flere indstillinger ----------
+
+    private bool _showAdvanced;
+
+    /// <summary>
+    /// Det man stiller én gang — visning, museknap, markering, vejledning, opstart — er skjult til at
+    /// begynde med. Siden var femten kort lang, og gennem luppen ser man kun et udsnit ad gangen.
+    /// </summary>
+    public bool ShowAdvanced => _showAdvanced;
+
+    public bool ShowAdvancedHint => !_showAdvanced;
+
+    public string AdvancedToggleText => _showAdvanced ? "Skjul de øvrige indstillinger" : "Vis flere indstillinger";
+
+    [RelayCommand]
+    private void ToggleAdvanced()
+    {
+        _showAdvanced = !_showAdvanced;
+        OnPropertyChanged(nameof(ShowAdvanced));
+        OnPropertyChanged(nameof(ShowAdvancedHint));
+        OnPropertyChanged(nameof(AdvancedToggleText));
+    }
 
     // ---------- Den gule tone ----------
 

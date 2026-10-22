@@ -147,6 +147,63 @@
                     </StackPanel>
                 </Border>
 
+                <!-- ============ Farver ============ -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource H2}" Text="Farver i luppen"/>
+                        <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,12"
+                                   Text="Mange med AMD læser lettest med omvendte farver eller gul på sort. Prøv dig frem — Ctrl + Alt + K skifter hurtigt mellem dem."/>
+                        <ItemsControl ItemsSource="{Binding ColorOptions}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <RadioButton GroupName="Farver" Style="{StaticResource ChoiceTile}"
+                                                 IsChecked="{Binding IsSelected, Mode=TwoWay}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Name}" FontSize="21" FontWeight="Bold"
+                                                       Foreground="{StaticResource Ink}"/>
+                                            <TextBlock Text="{Binding Description}" FontSize="18"
+                                                       Foreground="{StaticResource InkMuted}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </RadioButton>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Kun når en gul tilstand er valgt. Ellers gør tonen ingen forskel, og et valg
+                             der intet gør, er bare én ting mere at læse. -->
+                        <StackPanel Visibility="{Binding ShowYellowTone, Converter={StaticResource Vis}}">
+                        <TextBlock Style="{StaticResource H2}" Margin="0,20,0,6" Text="Hvilken gul skal bruges?"/>
+                        <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,10"
+                                   Text="Ruden viser tonen, som den kommer til at se ud — vælg den der er rarest for dine øjne."/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Body}" Text="Gul tone" Width="180"
+                                       VerticalAlignment="Center"/>
+                            <Button Style="{StaticResource StepButton}" Content="−" Command="{Binding YellowToneWarmerCommand}"/>
+                            <Border Width="260" Height="72" Margin="12,0" CornerRadius="8"
+                                    Background="{Binding YellowToneSwatch}"
+                                    BorderBrush="{StaticResource Line}" BorderThickness="2">
+                                <TextBlock Style="{StaticResource Readout}" Foreground="Black"
+                                           Text="{Binding YellowToneText}"/>
+                            </Border>
+                            <Button Style="{StaticResource StepButton}" Content="+" Command="{Binding YellowTonePalerCommand}"/>
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource Hint}" Margin="0,8,0,0"
+                                   Text="{Binding YellowToneDescription}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ Flere indstillinger ============ -->
+                <!-- Det man stiller én gang, ligger her. Skjult til at begynde med, så siden ikke er
+                     femten kort lang, når man læser den gennem luppen. -->
+                <Button Margin="0,4,0,8" MinHeight="64" FontSize="22" HorizontalAlignment="Stretch"
+                        Command="{Binding ToggleAdvancedCommand}" Content="{Binding AdvancedToggleText}"/>
+                <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,18" HorizontalAlignment="Center"
+                           Text="Visning, kontrast, museknapper, markering, vejledning og opstart"
+                           Visibility="{Binding ShowAdvancedHint, Converter={StaticResource Vis}}"/>
+
+                <StackPanel Margin="0,10,0,0" Visibility="{Binding ShowAdvanced, Converter={StaticResource Vis}}">
+
                 <!-- ============ Visning ============ -->
                 <Border Style="{StaticResource Card}">
                     <StackPanel>
@@ -170,47 +227,10 @@
                     </StackPanel>
                 </Border>
 
-                <!-- ============ Farver ============ -->
+                <!-- ============ Kontrast og lysstyrke ============ -->
                 <Border Style="{StaticResource Card}">
                     <StackPanel>
-                        <TextBlock Style="{StaticResource H2}" Text="Farver i luppen"/>
-                        <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,12"
-                                   Text="Mange med AMD læser lettest med omvendte farver eller gul på sort. Prøv dig frem — Ctrl + Alt + K skifter hurtigt mellem dem."/>
-                        <ItemsControl ItemsSource="{Binding ColorOptions}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <RadioButton GroupName="Farver" Style="{StaticResource ChoiceTile}"
-                                                 IsChecked="{Binding IsSelected, Mode=TwoWay}">
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding Name}" FontSize="21" FontWeight="Bold"
-                                                       Foreground="{StaticResource Ink}"/>
-                                            <TextBlock Text="{Binding Description}" FontSize="18"
-                                                       Foreground="{StaticResource InkMuted}" TextWrapping="Wrap"/>
-                                        </StackPanel>
-                                    </RadioButton>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <TextBlock Style="{StaticResource H2}" Margin="0,20,0,6" Text="Hvilken gul skal bruges?"/>
-                        <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,10"
-                                   Text="Gælder de to gule tilstande. Ruden viser tonen, som den kommer til at se ud — vælg den der er rarest for dine øjne."/>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Style="{StaticResource Body}" Text="Gul tone" Width="180"
-                                       VerticalAlignment="Center"/>
-                            <Button Style="{StaticResource StepButton}" Content="−" Command="{Binding YellowToneWarmerCommand}"/>
-                            <Border Width="260" Height="72" Margin="12,0" CornerRadius="8"
-                                    Background="{Binding YellowToneSwatch}"
-                                    BorderBrush="{StaticResource Line}" BorderThickness="2">
-                                <TextBlock Style="{StaticResource Readout}" Foreground="Black"
-                                           Text="{Binding YellowToneText}"/>
-                            </Border>
-                            <Button Style="{StaticResource StepButton}" Content="+" Command="{Binding YellowTonePalerCommand}"/>
-                        </StackPanel>
-                        <TextBlock Style="{StaticResource Hint}" Margin="0,8,0,0"
-                                   Text="{Binding YellowToneDescription}"/>
-
-                        <TextBlock Style="{StaticResource H2}" Margin="0,20,0,10" Text="Kontrast og lysstyrke"/>
+                        <TextBlock Style="{StaticResource H2}" Margin="0,0,0,10" Text="Kontrast og lysstyrke"/>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                             <TextBlock Style="{StaticResource Body}" Text="Kontrast" Width="180"
                                        VerticalAlignment="Center"/>
@@ -409,6 +429,8 @@
                                   Content="Tænd luppen med det samme, når programmet starter"/>
                     </StackPanel>
                 </Border>
+
+                </StackPanel>
 
             </StackPanel>
         </ScrollViewer>
