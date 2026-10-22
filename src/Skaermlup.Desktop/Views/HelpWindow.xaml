@@ -11,7 +11,7 @@
             <StackPanel>
                 <TextBlock Style="{StaticResource H1}" Text="Sådan bruger du Skærmlup"/>
                 <TextBlock Text="Alt kan gøres med musen. Alt kan også gøres med tastaturet."
-                           FontSize="19" Foreground="#D6E4E1" Margin="0,4,0,0"/>
+                           FontSize="19" Foreground="{StaticResource OnDarkMuted}" Margin="0,4,0,0"/>
             </StackPanel>
         </Border>
 
@@ -24,7 +24,7 @@
         <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
             <StackPanel Margin="24,20,24,24">
 
-                <Border Style="{StaticResource Card}" Background="#FFF9E9" BorderBrush="{StaticResource Accent}">
+                <Border Style="{StaticResource Card}" Background="{StaticResource Welcome}" BorderBrush="{StaticResource Accent}">
                     <StackPanel>
                         <TextBlock Style="{StaticResource H2}" Text="Det korte af det lange"/>
                         <ItemsControl x:Name="Steps">

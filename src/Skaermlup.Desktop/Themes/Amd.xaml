@@ -9,20 +9,10 @@
          programmet findes.
          ===================================================================== -->
 
-    <SolidColorBrush x:Key="Primary"      Color="#00443C"/>
-    <SolidColorBrush x:Key="PrimaryDark"  Color="#00302A"/>
-    <SolidColorBrush x:Key="PrimarySoft"  Color="#C3D6D3"/>
-    <SolidColorBrush x:Key="Accent"       Color="#F5B301"/>
-    <SolidColorBrush x:Key="AccentDark"   Color="#B98700"/>
-    <SolidColorBrush x:Key="Surface"      Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="SurfaceAlt"   Color="#EEF3F2"/>
-    <SolidColorBrush x:Key="Line"         Color="#8C9C99"/>
-    <SolidColorBrush x:Key="Ink"          Color="#0D1817"/>
-    <SolidColorBrush x:Key="InkMuted"     Color="#3D4B49"/>
-    <SolidColorBrush x:Key="OnDark"       Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="Danger"       Color="#96001B"/>
-    <SolidColorBrush x:Key="DangerSoft"   Color="#FBE7EA"/>
-    <SolidColorBrush x:Key="WarningBg"    Color="#FFF6DA"/>
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Colors.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+
 
     <FontFamily x:Key="UiFont">Verdana, Segoe UI, Arial</FontFamily>
 

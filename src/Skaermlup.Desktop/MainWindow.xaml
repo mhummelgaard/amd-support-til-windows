@@ -20,11 +20,11 @@
         <!-- Hovedet: navnet står stort, så vinduet kan kendes fra andre vinduer -->
         <Border DockPanel.Dock="Top" Background="{StaticResource Primary}" Padding="22,14">
             <StackPanel Orientation="Horizontal">
-                <Image Source="/Assets/skaermlup.ico" Width="46" Height="46"
+                <Image Source="/Assets/skaermlup.ico" Width="46" Height="46" AutomationProperties.Name="Skærmlup"
                        RenderOptions.BitmapScalingMode="HighQuality" VerticalAlignment="Center"/>
                 <StackPanel Margin="16,0,0,0" VerticalAlignment="Center">
                     <TextBlock Style="{StaticResource H1}" Text="Skærmlup"/>
-                    <TextBlock Text="Forstørrelsesglas til skærmen" FontSize="19" Foreground="#D6E4E1"/>
+                    <TextBlock Text="Forstørrelsesglas til skærmen" FontSize="19" Foreground="{StaticResource OnDarkMuted}"/>
                 </StackPanel>
             </StackPanel>
         </Border>
@@ -51,7 +51,7 @@
                     <StackPanel>
                         <Button Style="{StaticResource GiantButton}" Content="{Binding PowerLabel}"
                                 Command="{Binding TogglePowerCommand}"/>
-                        <TextBlock Style="{StaticResource H2}" Text="{Binding StatusHeadline}" Margin="0,16,0,4"/>
+                        <TextBlock Style="{StaticResource H2}" Text="{Binding StatusHeadline}" local:SpokenValue.Announce="True" Margin="0,16,0,4"/>
                         <TextBlock Style="{StaticResource Body}" Text="{Binding StatusDetail}"/>
                     </StackPanel>
                 </Border>
@@ -86,7 +86,7 @@
                 </Border>
 
                 <!-- ============ Kom godt i gang ============ -->
-                <Border Style="{StaticResource Card}" Background="#FFF9E9" BorderBrush="{StaticResource Accent}">
+                <Border Style="{StaticResource Card}" Background="{StaticResource Welcome}" BorderBrush="{StaticResource Accent}">
                     <StackPanel>
                         <TextBlock Style="{StaticResource H2}" Text="Sådan kommer du i gang"/>
                         <ItemsControl ItemsSource="{Binding GettingStarted}">
@@ -108,15 +108,15 @@
                     <StackPanel>
                         <TextBlock Style="{StaticResource H2}" Text="Hvor meget skal der forstørres?"/>
                         <StackPanel Orientation="Horizontal">
-                            <Button Style="{StaticResource StepButton}" Content="−"
+                            <Button Style="{StaticResource StepButton}" AutomationProperties.Name="Forstør mindre" Content="−"
                                     Command="{Binding ZoomOutCommand}"
                                     ToolTip="Forstør mindre"/>
                             <Border Width="150" Height="72" Margin="14,0" CornerRadius="8"
                                     Background="{StaticResource SurfaceAlt}"
                                     BorderBrush="{StaticResource Line}" BorderThickness="2">
-                                <TextBlock Style="{StaticResource Readout}" Text="{Binding ZoomText}"/>
+                                <TextBlock Style="{StaticResource Readout}" local:SpokenValue.Announce="True" Text="{Binding ZoomText}"/>
                             </Border>
-                            <Button Style="{StaticResource StepButton}" Content="+"
+                            <Button Style="{StaticResource StepButton}" AutomationProperties.Name="Forstør mere" Content="+"
                                     Command="{Binding ZoomInCommand}"
                                     ToolTip="Forstør mere"/>
                         </StackPanel>
@@ -130,14 +130,14 @@
                     <StackPanel>
                         <TextBlock Style="{StaticResource H2}" Text="Hvor stort skal området være?"/>
                         <StackPanel Orientation="Horizontal">
-                            <Button Style="{StaticResource StepButton}" Content="−"
+                            <Button Style="{StaticResource StepButton}" AutomationProperties.Name="Mindre område" Content="−"
                                     Command="{Binding SizeDownCommand}"/>
                             <Border Width="150" Height="72" Margin="14,0" CornerRadius="8"
                                     Background="{StaticResource SurfaceAlt}"
                                     BorderBrush="{StaticResource Line}" BorderThickness="2">
-                                <TextBlock Style="{StaticResource Readout}" Text="{Binding SizeText}"/>
+                                <TextBlock Style="{StaticResource Readout}" local:SpokenValue.Announce="True" Text="{Binding SizeText}"/>
                             </Border>
-                            <Button Style="{StaticResource StepButton}" Content="+"
+                            <Button Style="{StaticResource StepButton}" AutomationProperties.Name="Større område" Content="+"
                                     Command="{Binding SizeUpCommand}"/>
                         </StackPanel>
                         <TextBlock Style="{StaticResource Hint}" Margin="0,12,0,0"
@@ -157,6 +157,7 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <RadioButton GroupName="Farver" Style="{StaticResource ChoiceTile}"
+                                                 AutomationProperties.Name="{Binding Name}" AutomationProperties.HelpText="{Binding Description}"
                                                  IsChecked="{Binding IsSelected, Mode=TwoWay}">
                                         <StackPanel>
                                             <TextBlock Text="{Binding Name}" FontSize="21" FontWeight="Bold"
@@ -178,14 +179,14 @@
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Style="{StaticResource Body}" Text="Gul tone" Width="180"
                                        VerticalAlignment="Center"/>
-                            <Button Style="{StaticResource StepButton}" Content="−" Command="{Binding YellowToneWarmerCommand}"/>
+                            <Button Style="{StaticResource StepButton}" AutomationProperties.Name="Varmere gul" Content="−" Command="{Binding YellowToneWarmerCommand}"/>
                             <Border Width="260" Height="72" Margin="12,0" CornerRadius="8"
                                     Background="{Binding YellowToneSwatch}"
                                     BorderBrush="{StaticResource Line}" BorderThickness="2">
-                                <TextBlock Style="{StaticResource Readout}" Foreground="Black"
+                                <TextBlock Style="{StaticResource Readout}" local:SpokenValue.Announce="True" Foreground="Black"
                                            Text="{Binding YellowToneText}"/>
                             </Border>
-                            <Button Style="{StaticResource StepButton}" Content="+" Command="{Binding YellowTonePalerCommand}"/>
+                            <Button Style="{StaticResource StepButton}" AutomationProperties.Name="Blegere gul" Content="+" Command="{Binding YellowTonePalerCommand}"/>
                         </StackPanel>
                         <TextBlock Style="{StaticResource Hint}" Margin="0,8,0,0"
                                    Text="{Binding YellowToneDescription}"/>
@@ -234,24 +235,24 @@
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                             <TextBlock Style="{StaticResource Body}" Text="Kontrast" Width="180"
                                        VerticalAlignment="Center"/>
-                            <Button Style="{StaticResource StepButton}" Content="−" Command="{Binding ContrastDownCommand}"/>
+                            <Button Style="{StaticResource StepButton}" AutomationProperties.Name="Mindre kontrast" Content="−" Command="{Binding ContrastDownCommand}"/>
                             <Border Width="120" Height="72" Margin="12,0" CornerRadius="8"
                                     Background="{StaticResource SurfaceAlt}"
                                     BorderBrush="{StaticResource Line}" BorderThickness="2">
-                                <TextBlock Style="{StaticResource Readout}" Text="{Binding ContrastText}"/>
+                                <TextBlock Style="{StaticResource Readout}" local:SpokenValue.Announce="True" Text="{Binding ContrastText}"/>
                             </Border>
-                            <Button Style="{StaticResource StepButton}" Content="+" Command="{Binding ContrastUpCommand}"/>
+                            <Button Style="{StaticResource StepButton}" AutomationProperties.Name="Mere kontrast" Content="+" Command="{Binding ContrastUpCommand}"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Style="{StaticResource Body}" Text="Lysstyrke" Width="180"
                                        VerticalAlignment="Center"/>
-                            <Button Style="{StaticResource StepButton}" Content="−" Command="{Binding BrightnessDownCommand}"/>
+                            <Button Style="{StaticResource StepButton}" AutomationProperties.Name="Mørkere" Content="−" Command="{Binding BrightnessDownCommand}"/>
                             <Border Width="120" Height="72" Margin="12,0" CornerRadius="8"
                                     Background="{StaticResource SurfaceAlt}"
                                     BorderBrush="{StaticResource Line}" BorderThickness="2">
-                                <TextBlock Style="{StaticResource Readout}" Text="{Binding BrightnessText}"/>
+                                <TextBlock Style="{StaticResource Readout}" local:SpokenValue.Announce="True" Text="{Binding BrightnessText}"/>
                             </Border>
-                            <Button Style="{StaticResource StepButton}" Content="+" Command="{Binding BrightnessUpCommand}"/>
+                            <Button Style="{StaticResource StepButton}" AutomationProperties.Name="Lysere" Content="+" Command="{Binding BrightnessUpCommand}"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -307,7 +308,7 @@
                         <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,12"
                                    Text="Musepilen kommer ikke med i det forstørrede billede, så luppen tegner selv en markering. Den er sort på lys baggrund og hvid på mørk, så den altid kan ses. Windows egen musepil skjules imens, så der ikke er to markører på skærmen."/>
 
-                        <RadioButton GroupName="Markering" IsChecked="{Binding MarkerIsCrosshair, Mode=TwoWay}"
+                        <RadioButton GroupName="Markering" IsChecked="{Binding MarkerIsCrosshair, Mode=TwoWay}" AutomationProperties.Name="Kryds med hul i midten"
                                      Style="{StaticResource ChoiceTile}">
                             <StackPanel>
                                 <TextBlock Text="Kryds med hul i midten" FontSize="21" FontWeight="Bold"
@@ -317,7 +318,7 @@
                             </StackPanel>
                         </RadioButton>
 
-                        <RadioButton GroupName="Markering" IsChecked="{Binding MarkerIsUnderline, Mode=TwoWay}"
+                        <RadioButton GroupName="Markering" IsChecked="{Binding MarkerIsUnderline, Mode=TwoWay}" AutomationProperties.Name="Streg under linjen"
                                      Style="{StaticResource ChoiceTile}">
                             <StackPanel>
                                 <TextBlock Text="Streg under linjen" FontSize="21" FontWeight="Bold"
@@ -327,7 +328,7 @@
                             </StackPanel>
                         </RadioButton>
 
-                        <RadioButton GroupName="Markering" IsChecked="{Binding MarkerIsRing, Mode=TwoWay}"
+                        <RadioButton GroupName="Markering" IsChecked="{Binding MarkerIsRing, Mode=TwoWay}" AutomationProperties.Name="Kun en ring"
                                      Style="{StaticResource ChoiceTile}">
                             <StackPanel>
                                 <TextBlock Text="Kun en ring" FontSize="21" FontWeight="Bold"
@@ -337,7 +338,7 @@
                             </StackPanel>
                         </RadioButton>
 
-                        <RadioButton GroupName="Markering" IsChecked="{Binding MarkerIsNone, Mode=TwoWay}"
+                        <RadioButton GroupName="Markering" IsChecked="{Binding MarkerIsNone, Mode=TwoWay}" AutomationProperties.Name="Brug musens egen pil"
                                      Style="{StaticResource ChoiceTile}">
                             <StackPanel>
                                 <TextBlock Text="Brug musens egen pil" FontSize="21" FontWeight="Bold"
@@ -350,13 +351,13 @@
                         <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
                             <TextBlock Style="{StaticResource Body}" Text="Størrelse" Width="180"
                                        VerticalAlignment="Center"/>
-                            <Button Style="{StaticResource StepButton}" Content="−" Command="{Binding MarkerSmallerCommand}"/>
+                            <Button Style="{StaticResource StepButton}" AutomationProperties.Name="Mindre markering" Content="−" Command="{Binding MarkerSmallerCommand}"/>
                             <Border Width="140" Height="72" Margin="12,0" CornerRadius="8"
                                     Background="{StaticResource SurfaceAlt}"
                                     BorderBrush="{StaticResource Line}" BorderThickness="2">
-                                <TextBlock Style="{StaticResource Readout}" Text="{Binding MarkerSizeText}"/>
+                                <TextBlock Style="{StaticResource Readout}" local:SpokenValue.Announce="True" Text="{Binding MarkerSizeText}"/>
                             </Border>
-                            <Button Style="{StaticResource StepButton}" Content="+" Command="{Binding MarkerBiggerCommand}"/>
+                            <Button Style="{StaticResource StepButton}" AutomationProperties.Name="Større markering" Content="+" Command="{Binding MarkerBiggerCommand}"/>
                         </StackPanel>
 
                         <CheckBox Margin="0,18,0,0" IsChecked="{Binding ShellMoveLensAside, Mode=TwoWay}"
@@ -408,13 +409,13 @@
                         <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
                             <TextBlock Style="{StaticResource Body}" Text="Tekststørrelse" Width="180"
                                        VerticalAlignment="Center"/>
-                            <Button Style="{StaticResource StepButton}" Content="−" Command="{Binding InstructionsSmallerCommand}"/>
+                            <Button Style="{StaticResource StepButton}" AutomationProperties.Name="Mindre skrift i vejledningen" Content="−" Command="{Binding InstructionsSmallerCommand}"/>
                             <Border Width="140" Height="72" Margin="12,0" CornerRadius="8"
                                     Background="{StaticResource SurfaceAlt}"
                                     BorderBrush="{StaticResource Line}" BorderThickness="2">
-                                <TextBlock Style="{StaticResource Readout}" Text="{Binding InstructionScaleText}"/>
+                                <TextBlock Style="{StaticResource Readout}" local:SpokenValue.Announce="True" Text="{Binding InstructionScaleText}"/>
                             </Border>
-                            <Button Style="{StaticResource StepButton}" Content="+" Command="{Binding InstructionsBiggerCommand}"/>
+                            <Button Style="{StaticResource StepButton}" AutomationProperties.Name="Større skrift i vejledningen" Content="+" Command="{Binding InstructionsBiggerCommand}"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>

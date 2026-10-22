@@ -47,6 +47,9 @@ public partial class App : Application
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
         base.OnStartup(e);
 
+        // Før det første vindue: vinduerne henter farverne, når de bygges.
+        Themes.ContrastTheme.ApplyIfActive(Resources);
+
         DispatcherUnhandledException += OnUnhandledException;
 
         // Sidste udvej: går programmet ned ad en anden vej end den normale, skal musepilen

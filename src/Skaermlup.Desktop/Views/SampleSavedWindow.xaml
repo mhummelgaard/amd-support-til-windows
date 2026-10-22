@@ -12,7 +12,7 @@
         <Border DockPanel.Dock="Top" Background="{StaticResource Danger}" Padding="22,16">
             <StackPanel>
                 <TextBlock x:Name="Headline" Style="{StaticResource H1}"/>
-                <TextBlock x:Name="Subheadline" FontSize="21" Foreground="#FFE8E4"
+                <TextBlock x:Name="Subheadline" FontSize="21" Foreground="{StaticResource OnDangerMuted}"
                            Margin="0,4,0,0" TextWrapping="Wrap"/>
             </StackPanel>
         </Border>
