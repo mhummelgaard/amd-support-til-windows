@@ -10,15 +10,11 @@ namespace Skaermlup.Desktop;
 
 public partial class App : Application
 {
-    private const string InstanceKey = "Skaermlup.EnKoerselAdGangen.v1";
     private const string StartArgument = "--start";
     private const string SampleArgument = "--proevebillede=";
 
-    private Mutex? _instanceLock;
-    private EventWaitHandle? _showPanelSignal;
-    private RegisteredWaitHandle? _showPanelWait;
-    private EventWaitHandle? _sampleSignal;
-    private RegisteredWaitHandle? _sampleWait;
+    private InstanceSignals? _signals;
+    private readonly List<RegisteredWaitHandle> _waits = [];
     private AppShell? _shell;
 
     protected override void OnStartup(StartupEventArgs e)
@@ -27,22 +23,20 @@ public partial class App : Application
 
         // Ét program ad gangen. To lyttere på musen ville skændes om den samme knap,
         // og brugeren ville få to lupper oven på hinanden.
-        _instanceLock = new Mutex(initiallyOwned: true, InstanceKey, out bool isFirstInstance);
-        _showPanelSignal = new EventWaitHandle(false, EventResetMode.AutoReset, InstanceKey + ".VisPanel");
-        _sampleSignal = new EventWaitHandle(false, EventResetMode.AutoReset, InstanceKey + ".Proevebillede");
+        _signals = InstanceSignals.Open();
 
-        if (!isFirstInstance)
+        if (!_signals.IsFirstInstance)
         {
             // Programmet kører allerede. Send beskeden videre til den kopi der har luppen,
             // og luk os selv igen.
             if (sampleFolder is not null)
             {
                 SampleRequest.Write(sampleFolder);
-                _sampleSignal.Set();
+                _signals.Sample.Set();
             }
             else
             {
-                _showPanelSignal.Set();
+                _signals.ShowPanel.Set();
             }
 
             Shutdown();
@@ -77,20 +71,26 @@ public partial class App : Application
 
         if (!silentStart) _shell.ShowControlPanel();
 
-        _showPanelWait = ThreadPool.RegisterWaitForSingleObject(
-            _showPanelSignal,
-            (_, _) => Dispatcher.BeginInvoke(() => _shell?.ShowControlPanel()),
-            state: null,
-            millisecondsTimeOutInterval: Timeout.Infinite,
-            executeOnlyOnce: false);
+        Listen(_signals.ShowPanel, () => _shell?.ShowControlPanel());
+        Listen(_signals.Sample, SaveRequestedSample);
 
-        _sampleWait = ThreadPool.RegisterWaitForSingleObject(
-            _sampleSignal,
-            (_, _) => Dispatcher.BeginInvoke(SaveRequestedSample),
+        // Installeren beder om at få filerne fri. En pæn nedlukning giver musepilen tilbage —
+        // en tvungen gør ikke, og brugeren har netop luppen tændt for at kunne læse installeren.
+        Listen(_signals.Quit, () => _shell?.Exit());
+        Listen(_signals.Uninstall, () =>
+        {
+            _shell?.ForgetStartWithWindows();
+            _shell?.Exit();
+        });
+    }
+
+    private void Listen(WaitHandle signal, Action onSignal)
+        => _waits.Add(ThreadPool.RegisterWaitForSingleObject(
+            signal,
+            (_, _) => Dispatcher.BeginInvoke(onSignal),
             state: null,
             millisecondsTimeOutInterval: Timeout.Infinite,
-            executeOnlyOnce: false);
-    }
+            executeOnlyOnce: false));
 
     /// <summary>En anden kopi af programmet har bedt om et prøvebillede af den lup der kører her.</summary>
     private void SaveRequestedSample()
@@ -174,17 +174,9 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
-        _showPanelWait?.Unregister(null);
-        _sampleWait?.Unregister(null);
+        foreach (var wait in _waits) wait.Unregister(null);
         _shell?.Dispose();
-        _showPanelSignal?.Dispose();
-        _sampleSignal?.Dispose();
-
-        if (_instanceLock is not null)
-        {
-            try { _instanceLock.ReleaseMutex(); } catch (ApplicationException) { }
-            _instanceLock.Dispose();
-        }
+        _signals?.Dispose();
 
         base.OnExit(e);
     }

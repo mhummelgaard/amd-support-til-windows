@@ -306,6 +306,18 @@ internal sealed class AppShell : IDisposable
         Application.Current?.Shutdown();
     }
 
+    /// <summary>
+    /// Programmet afinstalleres. Autostart ligger hos brugeren selv, og installeren — der kører
+    /// som administrator, måske som en anden — kan ikke nå den. Uden det her ville Windows
+    /// forsøge at starte en slettet fil ved hver opstart.
+    /// </summary>
+    public void ForgetStartWithWindows()
+    {
+        StartupRegistration.Set(false);
+        Settings.StartWithWindows = false;
+        SaveNow();
+    }
+
     public void Dispose()
     {
         if (_disposed) return;

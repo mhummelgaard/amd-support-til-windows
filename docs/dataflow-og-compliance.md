@@ -133,6 +133,7 @@ Det er ikke en fejl — det er hele pointen med billedet — men det betyder:
 | **Ingen udklipsholder** | Ingen `Clipboard`-kald i koden | Rører ikke det, brugeren har kopieret. |
 | **Kun brugerens egen registreringsgren** | `Registry.CurrentUser` | Ingen maskinbrede ændringer efter installation. |
 | **Lille angrebsflade** | Én tredjepartspakke, tre system-DLL'er | Meget lidt at holde øje med i forsyningskæden. |
+| **Installeren kan bede programmet lukke pænt** | Navngivne signaler med egne rettigheder ([`InstanceSignals.cs`](../src/Skaermlup.Desktop/Services/InstanceSignals.cs)). Administratorer må se at programmet kører og bede det lukke eller glemme sin autostart — intet andet | En pæn nedlukning giver musepilen tilbage; en tvungen gør ikke. Administratorer kunne i forvejen lukke programmet med magt, så retten giver dem intet nyt. |
 
 ## A.5 Det der ikke sker — og hvor stærkt det er efterprøvet
 
