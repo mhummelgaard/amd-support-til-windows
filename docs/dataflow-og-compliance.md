@@ -3,7 +3,7 @@
 Sporing af hver eneste datastrøm i Skærmlup, og hvad den betyder i forhold til GDPR, NIS2,
 ISO/IEC 27001 og CRA.
 
-**Version:** Skærmlup 1.4.0 · **Skrevet:** 2026-09-09 · **Gælder commit:** se `git log` for denne fil
+**Version:** Skærmlup 1.5.0 · **Skrevet:** 2026-09-09, opdateret 2026-10-22 · **Gælder commit:** se `git log` for denne fil
 
 ---
 
@@ -153,22 +153,25 @@ De negative påstande er de vigtigste i dokumentet, så her står præcis hvor l
 | Ingen netværk via native kald | 56 `DllImport` mod udelukkende `user32`, `gdi32`, `kernel32`. Ingen `wininet`, `winhttp`, `ws2_32` | Stærk |
 | Ingen telemetri, ingen nedbrudsrapportering, ingen opdateringstjek | Ingen sådan kode findes; den eneste udgående kanal ville være netværk, og det er dækket ovenfor | Stærk |
 | Ingen tastaturaflytning | Ingen `WH_KEYBOARD`-krog. `GetAsyncKeyState` kun for Ctrl og Skift | Stærk |
-| **Programmet åbner ingen forbindelser under kørsel** | Observeret på den installerede 1.3.0 i almindelig brug: **`ws2_32.dll` er aldrig indlæst**, og nul endepunkter over 15 målinger | Stærk — se nedenfor |
+| **Programmet åbner ingen forbindelser under kørsel** | Observeret to gange: på 1.3.0 i almindelig brug og på den udgivne 1.5.0 med luppen tændt og UI Automation i gang. Begge gange: **`ws2_32.dll` aldrig indlæst**, og nul endepunkter | Stærk — se nedenfor |
 
-### Kørselsmålingen
+### Kørselsmålingerne
 
-Målt 2026-09-09 på `C:\Program Files\Skaermlup\Skaermlup.exe` 1.3.0.0, mens programmet havde
-kørt i syv minutter med luppen tændt i normal brug:
+| Måling | 1.3.0 · 2026-09-09 | **1.5.0 · 2026-10-22** |
+|---|---|---|
+| Program | Installeret, `C:\Program Files\Skaermlup` | Den udgivne binær (`publish\Skaermlup.exe`, `1.5.0+5fef15a`) |
+| Brug under målingen | Syv minutter med luppen tændt | Luppen tændt, fokus flyttet rundt med Tab |
+| UI Automation i gang (`UIAutomationCore.dll`) | — (fandtes ikke endnu) | **Ja** |
+| Indlæste moduler i alt | 140 | 162 |
+| `ws2_32.dll` (Winsock) | **Ikke indlæst** | **Ikke indlæst** |
+| `mswsock.dll` | **Ikke indlæst** | **Ikke indlæst** |
+| `dnsapi.dll` (navneopslag) | **Ikke indlæst** | **Ikke indlæst** |
+| `winhttp.dll`, `wininet.dll`, `schannel.dll` | **Ikke indlæst** | **Ikke indlæst** |
+| TCP-forbindelser | **0** i 15 målinger | **0** i 13 målinger |
+| UDP-endepunkter | **0** i 15 målinger | **0** i 13 målinger |
 
-| Måling | Resultat |
-|---|---|
-| Indlæste moduler i alt | 140 |
-| `ws2_32.dll` (Winsock) | **Ikke indlæst** |
-| `mswsock.dll` | **Ikke indlæst** |
-| `dnsapi.dll` (navneopslag) | **Ikke indlæst** |
-| `winhttp.dll`, `wininet.dll`, `schannel.dll` | **Ikke indlæst** |
-| TCP-forbindelser, 15 målinger over 60 sekunder | **0** |
-| UDP-endepunkter, 15 målinger over 60 sekunder | **0** |
+Målingen på 1.5.0 blev taget, fordi 1.5.0 er den første udgave, der taler med andre programmer
+gennem UI Automation (D11). Den skulle vise, at det ikke trækker netværk med sig. Det gør det ikke.
 
 **Det afgørende er den manglende `ws2_32.dll`.** Et Windows-program kan ikke oprette en TCP-
 eller UDP-forbindelse uden at Winsock er indlæst i processen. At biblioteket aldrig er kommet
@@ -360,4 +363,4 @@ Dette dokument er kun sandt for den commit, det står i. Det skal gennemgås nå
 - `efterproev-dataflow.ps1` fejler
 - der overhovedet kommer noget netværk i programmet — så skal hele del A skrives om
 
-Sidst efterprøvet mod koden: 2026-09-09, Skærmlup 1.4.0.
+Sidst efterprøvet mod koden: 2026-10-22, Skærmlup 1.5.0.
