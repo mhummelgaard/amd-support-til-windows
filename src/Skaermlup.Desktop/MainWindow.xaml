@@ -449,6 +449,24 @@
 
                 </StackPanel>
 
+                <!-- ============ Om Skærmlup ============ -->
+                <!-- Altid synligt, også uden "Vis flere indstillinger": programmet er gratis for alle,
+                     men oplysningen om udvikleren skal følge med. -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource H2}" Text="{Binding AboutHeading}"/>
+                        <TextBlock Style="{StaticResource Body}" FontWeight="Bold" Margin="0,0,0,8"
+                                   Text="{Binding AboutVersion}"/>
+                        <ItemsControl ItemsSource="{Binding AboutLines}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Style="{StaticResource Body}" Text="{Binding}" Margin="0,0,0,6"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
             </StackPanel>
         </ScrollViewer>
     </DockPanel>

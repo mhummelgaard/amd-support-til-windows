@@ -235,3 +235,27 @@ public class TriggerSetupTests
     public void Udloeber_tiden_faar_brugeren_at_vide_hvad_de_saa_kan_goere()
         => TriggerSetup.TimedOut.ShouldContain("Ctrl + Alt + L");
 }
+
+public class AboutTests
+{
+    [Fact]
+    public void Udvikleren_staar_i_programmet()
+    {
+        // Gratis for alle — men udvikleren skal fremgå. Det er betingelsen i licensen.
+        string.Join(' ', About.Lines).ShouldContain("Michael Hummelgaard");
+        About.OneLine("1.4.0").ShouldContain("Michael Hummelgaard");
+    }
+
+    [Fact]
+    public void Det_fremgaar_at_programmet_er_gratis_og_maa_gives_videre()
+    {
+        string tekst = string.Join(' ', About.Lines);
+        tekst.ShouldContain("Gratis");
+        tekst.ShouldContain("give videre");
+        tekst.ShouldContain("MIT");
+    }
+
+    [Fact]
+    public void Versionen_vises_med_navnet()
+        => About.Version("1.4.0").ShouldBe("Skærmlup 1.4.0");
+}

@@ -31,6 +31,14 @@ internal sealed partial class ControlPanelViewModel : ObservableObject
         _shell.TriggerSetupChanged += (_, _) => RefreshAll();
     }
 
+    // ---------- Om Skærmlup ----------
+
+    public string AboutHeading => About.Heading;
+
+    public string AboutVersion => About.Version(AppInfo.Version);
+
+    public IReadOnlyList<string> AboutLines => About.Lines;
+
     // ---------- Vælg knappen ved at trykke på den ----------
 
     public bool IsLearningTrigger => _shell.IsLearningTrigger;

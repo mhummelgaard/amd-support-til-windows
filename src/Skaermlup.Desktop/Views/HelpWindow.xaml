@@ -17,8 +17,11 @@
 
         <Border DockPanel.Dock="Bottom" Background="{StaticResource Surface}"
                 BorderBrush="{StaticResource Line}" BorderThickness="0,2,0,0" Padding="22,14">
-            <Button Style="{StaticResource PrimaryButton}" Content="Luk vejledningen"
-                    HorizontalAlignment="Right" Click="OnClose"/>
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Content="Luk vejledningen"
+                        Margin="14,0,0,0" Click="OnClose"/>
+                <TextBlock x:Name="AboutLine" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
+            </DockPanel>
         </Border>
 
         <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">

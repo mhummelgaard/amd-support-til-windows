@@ -16,6 +16,8 @@ AppName={#AppDisplayName}
 AppVersion={#AppVersion}
 AppVerName={#AppDisplayName} {#AppVersion}
 AppPublisher={#Publisher}
+; Gratis for alle — men udvikleren skal fremgå. Står også i installerens filegenskaber.
+AppCopyright=© 2026 {#Publisher} · Gratis for alle (MIT-licens)
 DefaultDirName={autopf}\Skaermlup
 DefaultGroupName={#AppDisplayName}
 UninstallDisplayIcon={app}\{#ExeName}
@@ -43,6 +45,8 @@ Name: "desktopicon"; Description: "Opret en genvej på skrivebordet"; GroupDescr
 
 [Files]
 Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
+; MIT-licensen kræver, at copyright-linjen med udviklerens navn følger med hver kopi.
+Source: "..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{#AppDisplayName}"; Filename: "{app}\{#ExeName}"

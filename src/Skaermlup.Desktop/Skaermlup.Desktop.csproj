@@ -24,6 +24,10 @@
     <Version>1.4.0</Version>
     <AssemblyTitle>Skaermlup - forstoerrelsesglas til skaermen</AssemblyTitle>
     <Company>Michael Hummelgaard</Company>
+    <!-- Står i filens egenskaber i Stifinder. Gratis for alle — men udvikleren skal fremgå. -->
+    <Authors>Michael Hummelgaard</Authors>
+    <Product>Skærmlup</Product>
+    <Copyright>© 2026 Michael Hummelgaard · Gratis for alle (MIT-licens)</Copyright>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
   </PropertyGroup>
 

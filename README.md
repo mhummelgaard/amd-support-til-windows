@@ -5,6 +5,10 @@ og anden nedsat syn. Det forstørrer et område af skærmen — tekst, grafik, b
 der står der — og kan tændes med **ét tryk på en museknap**, uden at brugeren først skal finde
 noget lille og ulæseligt på skærmen.
 
+**Udviklet af Michael Hummelgaard. Gratis for alle at bruge, kopiere og give videre** — det eneste
+krav er, at oplysningen om udvikleren følger med. Det er betingelsen i [MIT-licensen](LICENSE), som
+installeren lægger i programmets mappe, og det står i programmet under "Om Skærmlup".
+
 Lokalt Windows-program. .NET 10 / WPF. Ingen konto, ingen internetforbindelse, ingen data
 der forlader maskinen.
 
@@ -157,7 +161,7 @@ Skaermlup.Desktop  ──►  Skaermlup.Core
 |---|---|
 | `src/Skaermlup.Core` | Geometri, forstørrelsestrin, farvefiltre, museudløser, indstillinger, alle tekster. Ingen afhængigheder — derfor testbart. |
 | `src/Skaermlup.Desktop` | WPF-vinduer, skærmkopiering, global musekrog og tastaturgenveje. Ingen tastaturaflytning — se [dataflowsporingen](docs/dataflow-og-compliance.md). |
-| `tests/Skaermlup.Tests` | 201 enhedstests af kernen. |
+| `tests/Skaermlup.Tests` | 243 enhedstests af kernen. |
 | `docs/` | [Dataflow og compliance](docs/dataflow-og-compliance.md), [trusselsmodel](docs/trusselsmodel.md) og [stykliste](docs/sbom/). Hver datastrøm sporet, og hvad den betyder for GDPR, NIS2, ISO og CRA. |
 | [`SECURITY.md`](SECURITY.md) | Sådan melder du en sårbarhed, og hvad du kan forvente. |
 
@@ -359,7 +363,7 @@ winget install Microsoft.DotNet.SDK.10 JRSoftware.InnoSetup Microsoft.PowerShell
 
 `Skaermlup.Core` er rent `net10.0` uden en eneste Windows-afhængighed. Det var et bevidst valg
 fra begyndelsen — al geometri, farvebehandling, museudløser og opskalering ligger dér — og det
-er derfor de 201 tests kan køres i et rent Linux-miljø, uafhængigt af hvad der tilfældigvis er
+er derfor de 243 tests kan køres i et rent Linux-miljø, uafhængigt af hvad der tilfældigvis er
 installeret på Windows-maskinen.
 
 `.devcontainer/` beskriver det miljø. I VS Code åbnes det med **Reopen in Container**. Uden
