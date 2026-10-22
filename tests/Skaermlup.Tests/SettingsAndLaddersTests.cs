@@ -182,3 +182,42 @@ public class SampleWarningTests
         SampleWarning.Body.Count.ShouldBeGreaterThanOrEqualTo(2);
     }
 }
+
+public class ConfirmationsTests
+{
+    public static TheoryData<Confirmation> Alle =>
+    [
+        Confirmations.Reset,
+        Confirmations.Quit(startsWithWindows: true),
+        Confirmations.Quit(startsWithWindows: false),
+    ];
+
+    [Theory]
+    [MemberData(nameof(Alle))]
+    public void Hvert_spoergsmaal_har_tekst_og_to_forskellige_svar(Confirmation q)
+    {
+        q.Title.ShouldNotBeNullOrWhiteSpace();
+        q.Body.ShouldNotBeEmpty();
+        q.Keep.ShouldNotBeNullOrWhiteSpace();
+        q.Proceed.ShouldNotBeNullOrWhiteSpace();
+
+        // Knapperne skal kunne skelnes på ordene alene, ikke kun på farven.
+        q.Keep.ShouldStartWith("Nej");
+        q.Proceed.ShouldStartWith("Ja");
+    }
+
+    [Fact]
+    public void Nulstil_siger_at_det_ikke_kan_fortrydes()
+        => string.Join(' ', Confirmations.Reset.Body).ShouldContain("kan ikke fortrydes");
+
+    [Fact]
+    public void Afslut_fortaeller_hvordan_luppen_kommer_tilbage()
+    {
+        string medWindows = string.Join(' ', Confirmations.Quit(startsWithWindows: true).Body);
+        string udenWindows = string.Join(' ', Confirmations.Quit(startsWithWindows: false).Body);
+
+        medWindows.ShouldContain("computeren starter");
+        udenWindows.ShouldNotContain("computeren starter");
+        udenWindows.ShouldContain("Start-menuen");
+    }
+}

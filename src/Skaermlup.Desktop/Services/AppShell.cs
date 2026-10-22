@@ -300,12 +300,25 @@ internal sealed class AppShell : IDisposable
     /// <summary>Sandt når programmet er på vej ned, så vinduerne ikke afviser at lukke.</summary>
     public bool IsShuttingDown { get; private set; }
 
+    /// <summary>
+    /// Afslutter uden at spørge. Bruges af installeren, der ikke kan svare på et spørgsmål.
+    /// Knapperne bruger <see cref="ExitAfterAsking"/>.
+    /// </summary>
     public void Exit()
     {
         IsShuttingDown = true;
         SaveNow();
         Application.Current?.Shutdown();
     }
+
+    /// <summary>Afslut, men først når brugeren har bekræftet det.</summary>
+    public void ExitAfterAsking()
+    {
+        if (Confirm(Confirmations.Quit(Settings.StartWithWindows))) Exit();
+    }
+
+    /// <summary>Spørger med programmets egen store skrift. Sandt hvis brugeren vil gøre det.</summary>
+    public bool Confirm(Confirmation question) => ConfirmWindow.Ask(question, _panel);
 
     /// <summary>
     /// Programmet afinstalleres. Autostart ligger hos brugeren selv, og installeren — der kører

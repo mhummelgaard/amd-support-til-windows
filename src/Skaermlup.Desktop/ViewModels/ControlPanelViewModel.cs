@@ -395,6 +395,8 @@ internal sealed partial class ControlPanelViewModel : ObservableObject
     [RelayCommand]
     private void ResetToDefaults()
     {
+        if (!_shell.Confirm(Confirmations.Reset)) return;
+
         var defaults = new AppSettings
         {
             StartWithWindows = S.StartWithWindows,
@@ -438,7 +440,7 @@ internal sealed partial class ControlPanelViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void Exit() => _shell.Exit();
+    private void Exit() => _shell.ExitAfterAsking();
 
     // ---------- Fælles ----------
 
