@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using Microsoft.Win32;
+using Skaermlup.Core.Settings;
 
 namespace Skaermlup.Desktop.Services;
 
@@ -42,7 +43,7 @@ internal static class StartupRegistration
             string? path = Environment.ProcessPath;
             if (string.IsNullOrWhiteSpace(path)) return false;
 
-            key.SetValue(ValueName, "\"" + path + "\" --start", RegistryValueKind.String);
+            key.SetValue(ValueName, "\"" + path + "\" " + StartupPlan.WithWindowsArgument, RegistryValueKind.String);
             return true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)

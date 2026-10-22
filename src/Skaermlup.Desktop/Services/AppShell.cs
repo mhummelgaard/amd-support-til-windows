@@ -80,7 +80,8 @@ internal sealed class AppShell : IDisposable
 
     public IReadOnlyList<ShortcutDefinition> UnavailableShortcuts => _hotkeys.Unavailable;
 
-    public void Start(bool startMagnifier)
+    /// <param name="turnLensOn">Afgjort af <see cref="StartupPlan"/> ud fra hvordan programmet blev startet.</param>
+    public void Start(bool turnLensOn)
     {
         Magnifier.Prepare();
 
@@ -98,7 +99,7 @@ internal sealed class AppShell : IDisposable
         RefreshInstructions();
         WriteDiagnostics();
 
-        if (startMagnifier || Settings.StartMagnifierOnLaunch) Magnifier.TurnOn();
+        if (turnLensOn) Magnifier.TurnOn();
     }
 
     // ---------- Museknapper ----------

@@ -10,16 +10,13 @@ namespace Skaermlup.Desktop;
 
 public partial class App : Application
 {
-    private const string StartArgument = "--start";
-    private const string SampleArgument = "--proevebillede=";
-
     private InstanceSignals? _signals;
     private readonly List<RegisteredWaitHandle> _waits = [];
     private AppShell? _shell;
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        string? sampleFolder = SampleFolder(e.Args);
+        string? sampleFolder = StartupPlan.SampleFolderIn(e.Args);
 
         // Ét program ad gangen. To lyttere på musen ville skændes om den samme knap,
         // og brugeren ville få to lupper oven på hinanden.
@@ -57,19 +54,19 @@ public partial class App : Application
         AppDomain.CurrentDomain.ProcessExit += (_, _) => _shell?.Dispose();
 
         var store = new SettingsStore(SettingsStore.DefaultPath);
-        _shell = new AppShell(store, store.Load());
+        var settings = store.Load();
+        var plan = StartupPlan.From(e.Args, settings);
 
-        bool silentStart = e.Args.Any(a => string.Equals(a, StartArgument, StringComparison.OrdinalIgnoreCase));
+        _shell = new AppShell(store, settings);
+        _shell.Start(turnLensOn: plan.TurnLensOn);
 
-        _shell.Start(startMagnifier: silentStart || sampleFolder is not null);
-
-        if (sampleFolder is not null)
+        if (plan is { Kind: LaunchKind.Sample, SampleFolder: { } folder })
         {
-            SaveSampleAndQuit(sampleFolder);
+            SaveSampleAndQuit(folder);
             return;
         }
 
-        if (!silentStart) _shell.ShowControlPanel();
+        if (plan.ShowControlPanel) _shell.ShowControlPanel();
 
         Listen(_signals.ShowPanel, () => _shell?.ShowControlPanel());
         Listen(_signals.Sample, SaveRequestedSample);
@@ -109,17 +106,6 @@ public partial class App : Application
 
         var saved = _shell.SaveDiagnosticImages(folder);
         return _shell.ShowSampleSaved(folder, saved);
-    }
-
-    private static string? SampleFolder(IEnumerable<string> args)
-    {
-        foreach (string arg in args)
-        {
-            if (arg.StartsWith(SampleArgument, StringComparison.OrdinalIgnoreCase))
-                return arg[SampleArgument.Length..].Trim('"');
-        }
-
-        return null;
     }
 
     /// <summary>
