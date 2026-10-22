@@ -17,9 +17,16 @@ namespace Skaermlup.Desktop.Services;
 internal sealed class AppShell : IDisposable
 {
     private readonly SettingsStore _store;
+    private readonly Dispatcher _dispatcher = Dispatcher.CurrentDispatcher;
     private readonly GlobalMouseHook _mouse = new();
     private readonly HotkeyService _hotkeys = new();
+
+    // Bruges fra både musens lyttertråd og hovedtråden, så adgangen går gennem en lås.
     private readonly MouseTriggerDetector _trigger = new();
+    private readonly object _triggerLock = new();
+
+    private readonly HookWatchdog _hookWatchdog = new();
+    private readonly DispatcherTimer _hookTimer;
     private readonly DispatcherTimer _instructionTimer;
     private readonly DispatcherTimer _saveTimer;
 
@@ -50,6 +57,12 @@ internal sealed class AppShell : IDisposable
             _saveTimer.Stop();
             SaveNow();
         };
+
+        _hookTimer = new DispatcherTimer(DispatcherPriority.Background)
+        {
+            Interval = TimeSpan.FromSeconds(2),
+        };
+        _hookTimer.Tick += (_, _) => CheckMouseHook();
     }
 
     public AppSettings Settings { get; }
@@ -59,14 +72,24 @@ internal sealed class AppShell : IDisposable
     /// <summary>Falsk hvis Windows ikke ville lade os lytte på musen. Så virker museknappen ikke.</summary>
     public bool MouseTriggerWorks { get; private set; } = true;
 
+    /// <summary>Hvor mange gange musens lytter er sat op igen, fordi Windows havde fjernet den.</summary>
+    public int MouseHookReinstalls => _mouse.Reinstalls;
+
+    /// <summary>Museknappen er holdt op med at virke, eller virker igen.</summary>
+    public event EventHandler? MouseTriggerHealthChanged;
+
     public IReadOnlyList<ShortcutDefinition> UnavailableShortcuts => _hotkeys.Unavailable;
 
     public void Start(bool startMagnifier)
     {
         Magnifier.Prepare();
-        MouseTriggerWorks = _mouse.Install();
+
+        // Abonnér før lytteren startes. Den kører på sin egen tråd og kan nå at høre et klik,
+        // før Install vender tilbage.
         _mouse.Button += OnMouseButton;
         _mouse.Wheel += OnMouseWheel;
+        MouseTriggerWorks = _mouse.Install();
+        _hookTimer.Start();
 
         _hotkeys.Command += (_, command) => Execute(command);
         _hotkeys.Install();
@@ -80,20 +103,26 @@ internal sealed class AppShell : IDisposable
 
     // ---------- Museknapper ----------
 
+    // Kører på musens lyttertråd. Beslutningen træffes her, fordi Windows skal have svar på om
+    // klikket skal holdes tilbage, før metoden vender tilbage. Selve arbejdet sendes til
+    // hovedtråden. Indstillingerne læses herfra uden lås: det er enkle værdier, og et klik
+    // der læser den gamle værdi et øjeblik efter en ændring, gør ingen skade.
     private void OnMouseButton(object? sender, MouseButtonHookEventArgs e)
     {
-        _trigger.Buttons = Settings.Trigger;
-        _trigger.Mode = Settings.TriggerMode;
-        _trigger.BlockTriggerClicks = Settings.BlockTriggerClicks;
+        TriggerDecision decision;
+        lock (_triggerLock)
+        {
+            _trigger.Buttons = Settings.Trigger;
+            _trigger.Mode = Settings.TriggerMode;
+            _trigger.BlockTriggerClicks = Settings.BlockTriggerClicks;
 
-        var decision = _trigger.Decide(new MouseButtonEvent(e.Button, e.IsDown, e.TimestampMs));
+            decision = _trigger.Decide(new MouseButtonEvent(e.Button, e.IsDown, e.TimestampMs));
+        }
         e.Swallow = decision.Swallow;
 
         if (decision.Outcome == TriggerOutcome.None) return;
 
-        // Selve arbejdet lægges i kø. En lytter på musen skal svare med det samme,
-        // ellers fjerner Windows den igen.
-        Application.Current?.Dispatcher.BeginInvoke(() =>
+        _dispatcher.BeginInvoke(() =>
         {
             switch (decision.Outcome)
             {
@@ -111,7 +140,7 @@ internal sealed class AppShell : IDisposable
 
         if (decision.Outcome == WheelOutcome.None) return;
 
-        Application.Current?.Dispatcher.BeginInvoke(() =>
+        _dispatcher.BeginInvoke(() =>
         {
             switch (decision.Outcome)
             {
@@ -123,6 +152,23 @@ internal sealed class AppShell : IDisposable
 
             SaveSoon();
         });
+    }
+
+    /// <summary>
+    /// Vagten over musens lytter. Windows fjerner en lytter der er for længe om at svare, uden at
+    /// sige det. Har musen flyttet sig uden at lytteren hørte det, sættes den op igen.
+    /// </summary>
+    private void CheckMouseHook()
+    {
+        if (_hookWatchdog.Check(ScreenInfo.CursorPosition(), _mouse.LastEventMs, Environment.TickCount64))
+            _mouse.Reinstall();
+
+        bool works = _mouse.IsInstalled;
+        if (works == MouseTriggerWorks) return;
+
+        MouseTriggerWorks = works;
+        RefreshInstructions();
+        MouseTriggerHealthChanged?.Invoke(this, EventArgs.Empty);
     }
 
     // ---------- Kommandoer ----------
@@ -216,7 +262,7 @@ internal sealed class AppShell : IDisposable
             : ScreenInfo.CursorPosition();
         var monitor = ScreenInfo.WorkAreaAt(anchor);
 
-        _bar.Refresh(Magnifier.IsActive, Settings, monitor);
+        _bar.Refresh(Magnifier.IsActive, Settings, monitor, MouseTriggerWorks);
         _bar.Reassert();
     }
 
@@ -226,7 +272,7 @@ internal sealed class AppShell : IDisposable
     public void SettingsChanged()
     {
         // Skifter brugeren udløserknap midt i et tryk, skal det halve tryk glemmes.
-        _trigger.Reset();
+        lock (_triggerLock) _trigger.Reset();
         Magnifier.ApplySettings();
         RefreshInstructions();
         SaveSoon();
@@ -266,6 +312,7 @@ internal sealed class AppShell : IDisposable
         _disposed = true;
 
         _instructionTimer.Stop();
+        _hookTimer.Stop();
         _saveTimer.Stop();
 
         _mouse.Button -= OnMouseButton;

@@ -170,4 +170,35 @@ public class InstructionsTests
         chips.Count.ShouldBeLessThanOrEqualTo(5);
         foreach (var chip in chips) chip.Action.Length.ShouldBeLessThanOrEqualTo(40);
     }
+
+    [Fact]
+    public void Virker_museknappen_ikke_lover_vejledningen_det_heller_ikke()
+    {
+        var settings = new AppSettings();
+
+        foreach (bool on in new[] { false, true })
+        {
+            string text = Instructions.CallToAction(on, settings, mouseWorks: false);
+
+            text.ShouldContain("Ctrl + Alt + L");
+            text.ShouldNotContain("Tryk på midterste");
+
+            var chips = Instructions.Bar(on, settings, mouseWorks: false);
+            chips.ShouldNotContain(c => c.Action.Contains("museknap") || c.Action.Contains("hjulet"));
+            chips[0].Action.ShouldBe("Ctrl + Alt + L");
+        }
+    }
+
+    [Fact]
+    public void Uden_mus_vises_tastaturets_genveje_for_forstoerrelse_og_stoerrelse()
+    {
+        var chips = Instructions.Bar(magnifierOn: true, new AppSettings(), mouseWorks: false);
+
+        chips.ShouldContain(c => c.Action.StartsWith("Ctrl + Alt + plus"));
+        chips.ShouldContain(c => c.Action.StartsWith("Ctrl + Alt + Page Up"));
+
+        // Skal stadig kunne stå med stor skrift.
+        chips.Count.ShouldBeLessThanOrEqualTo(5);
+        foreach (var chip in chips) chip.Action.Length.ShouldBeLessThanOrEqualTo(40);
+    }
 }

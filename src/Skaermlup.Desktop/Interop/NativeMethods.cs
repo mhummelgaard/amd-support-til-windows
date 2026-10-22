@@ -27,6 +27,12 @@ internal static partial class NativeMethods
 
     // ---------- Beskeder ----------
     public const int WM_HOTKEY = 0x0312;
+    public const int WM_QUIT = 0x0012;
+
+    // Første nummer et program frit kan bruge til sine egne beskeder.
+    public const int WM_APP = 0x8000;
+
+    public const uint PM_NOREMOVE = 0x0000;
 
 
     public const int WM_DPICHANGED = 0x02E0;
@@ -106,6 +112,18 @@ internal static partial class NativeMethods
         public int yHotspot;
         public IntPtr hbmMask;
         public IntPtr hbmColor;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MSG
+    {
+        public IntPtr hwnd;
+        public uint message;
+        public IntPtr wParam;
+        public IntPtr lParam;
+        public uint time;
+        public POINT pt;
+        public uint lPrivate;
     }
 
     [StructLayout(LayoutKind.Sequential)]

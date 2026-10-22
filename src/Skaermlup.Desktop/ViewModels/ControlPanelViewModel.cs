@@ -27,6 +27,7 @@ internal sealed partial class ControlPanelViewModel : ObservableObject
             .ToList();
 
         _shell.Magnifier.Changed += (_, _) => RefreshAll();
+        _shell.MouseTriggerHealthChanged += (_, _) => RefreshAll();
     }
 
     private AppSettings S => _shell.Settings;
@@ -39,7 +40,7 @@ internal sealed partial class ControlPanelViewModel : ObservableObject
 
     public string StatusHeadline => Instructions.Headline(IsOn, S);
 
-    public string StatusDetail => Instructions.CallToAction(IsOn, S);
+    public string StatusDetail => Instructions.CallToAction(IsOn, S, _shell.MouseTriggerWorks);
 
     public IReadOnlyList<string> GettingStarted => Instructions.GettingStarted(S);
 

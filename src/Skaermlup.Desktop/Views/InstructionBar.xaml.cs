@@ -42,13 +42,13 @@ public partial class InstructionBar : Window
     }
 
     /// <summary>Opdaterer teksten og lægger bjælken langs den rigtige kant af den rigtige skærm.</summary>
-    public void Refresh(bool magnifierOn, AppSettings settings, PixelRect monitor)
+    public void Refresh(bool magnifierOn, AppSettings settings, PixelRect monitor, bool mouseWorks)
     {
         if (monitor.IsEmpty) return;
 
         var headline = Instructions.Headline(magnifierOn, settings);
-        var callToAction = Instructions.CallToAction(magnifierOn, settings);
-        var chips = Instructions.Bar(magnifierOn, settings);
+        var callToAction = Instructions.CallToAction(magnifierOn, settings, mouseWorks);
+        var chips = Instructions.Bar(magnifierOn, settings, mouseWorks);
         var edge = PlacementFor(magnifierOn, settings);
 
         // Bjælken bliver spurgt flere gange i sekundet. Er teksten den samme som sidst,

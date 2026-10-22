@@ -53,8 +53,18 @@ public static class Instructions
             : "LUPPEN ER SLUKKET";
 
     /// <summary>Den ene sætning brugeren skal kunne handle på uden at lede efter noget.</summary>
-    public static string CallToAction(bool magnifierOn, AppSettings settings)
+    /// <param name="mouseWorks">
+    /// Falsk når Windows har taget lytteren på musen fra programmet. Så må vejledningen ikke
+    /// blive ved med at love at museknappen virker — det ville få brugeren til at tro at fejlen
+    /// er deres egen.
+    /// </param>
+    public static string CallToAction(bool magnifierOn, AppSettings settings, bool mouseWorks = true)
     {
+        if (!mouseWorks)
+            return "Museknappen virker ikke lige nu. Tryk "
+                   + Shortcuts.DisplayFor(AppCommand.ToggleMagnifier)
+                   + (magnifierOn ? " for at slukke luppen" : " for at tænde luppen");
+
         string trigger = TriggerSummary(settings.Trigger);
 
         if (!magnifierOn)
@@ -68,17 +78,35 @@ public static class Instructions
     }
 
     /// <summary>De få genveje der skal stå fremme hele tiden. Flere ville drukne budskabet.</summary>
-    public static IReadOnlyList<InstructionChip> Bar(bool magnifierOn, AppSettings settings)
+    /// <param name="mouseWorks">
+    /// Falsk når lytteren på musen er væk. Både museknappen og hjulet går gennem den, så i det
+    /// tilfælde vises tastaturets genveje i stedet for alle tre.
+    /// </param>
+    public static IReadOnlyList<InstructionChip> Bar(bool magnifierOn, AppSettings settings, bool mouseWorks = true)
     {
+        string power = magnifierOn ? "sluk luppen" : "tænd luppen";
         var chips = new List<InstructionChip>
         {
-            new(TriggerSummary(settings.Trigger), magnifierOn ? "sluk luppen" : "tænd luppen"),
+            mouseWorks
+                ? new(TriggerSummary(settings.Trigger), power)
+                : new(Shortcuts.DisplayFor(AppCommand.ToggleMagnifier), power),
         };
 
         if (magnifierOn)
         {
-            chips.Add(new InstructionChip("Ctrl + rul på hjulet", "forstør mere eller mindre"));
-            chips.Add(new InstructionChip("Skift + rul på hjulet", "større eller mindre lup"));
+            if (mouseWorks)
+            {
+                chips.Add(new InstructionChip("Ctrl + rul på hjulet", "forstør mere eller mindre"));
+                chips.Add(new InstructionChip("Skift + rul på hjulet", "større eller mindre lup"));
+            }
+            else
+            {
+                chips.Add(new InstructionChip(
+                    Shortcuts.DisplayFor(AppCommand.ZoomIn) + " / minus", "forstør mere eller mindre"));
+                chips.Add(new InstructionChip(
+                    Shortcuts.DisplayFor(AppCommand.LensBigger) + " / Page Down", "større eller mindre lup"));
+            }
+
             chips.Add(new InstructionChip(Shortcuts.DisplayFor(AppCommand.NextColors),
                 "farver: " + ColorSchemes.Name(settings.Colors).ToLowerInvariant()));
         }
