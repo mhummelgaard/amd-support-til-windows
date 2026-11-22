@@ -288,7 +288,7 @@ som huskeliste. De kontroller der faktisk kan bæres af et projekt som dette:
 | A.8.31 Adskilte miljøer | **God.** Byg og test kører også i en container uden Windows-afhængigheder |
 | A.8.32 Ændringsstyring | **God.** Alt gennem Git med sporbare commits; udgivelser bærer commit-id i `ProductVersion` |
 | A.5.20/5.21 Leverandørkæde | **God i praksis.** Én afhængighed, tre system-DLL'er |
-| A.8.4 Adgang til kildekode | **God.** Privat arkiv, én ejer |
+| A.8.4 Adgang til kildekode | **God.** Offentligt arkiv: alle kan læse koden, kun ejeren kan ændre den |
 
 Andre standarder der er værd at kende, hvis luppen skal sælges:
 
@@ -304,8 +304,9 @@ Andre standarder der er værd at kende, hvis luppen skal sælges:
 Cyberresiliensforordningen (forordning (EU) 2024/2847) gælder produkter med digitale elementer,
 der bringes i omsætning i EU. Efter min læsning:
 
-- **Lige nu: uden for.** Luppen er gratis, arkivet er privat, og den bringes ikke i omsætning.
-  Fri og open source-software leveret uden for erhvervsmæssig virksomhed er i vidt omfang undtaget.
+- **Lige nu: uden for.** Luppen er gratis, kildekoden er offentlig under MIT-licensen, og den
+  bringes ikke i omsætning som led i erhvervsmæssig virksomhed. Fri og open source-software
+  leveret uden for erhvervsmæssig virksomhed er i vidt omfang undtaget.
 - **Hvis den sælges, eller distribueres bredt som led i erhvervsmæssig virksomhed: indenfor.**
   Så følger krav om sikker udvikling, håndtering af sårbarheder gennem hele levetiden,
   indberetning af aktivt udnyttede sårbarheder, SBOM og CE-mærkning.

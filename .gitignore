@@ -31,6 +31,9 @@ coverage*.xml
 installer/koer-*.cmd
 installer/byg-*.cmd
 
+# Brochuren er ejerens eget arbejdsmateriale og hører ikke til i arkivet.
+brochure/
+
 # Støj fra styresystemet
 Thumbs.db
 Desktop.ini

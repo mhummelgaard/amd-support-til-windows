@@ -56,6 +56,11 @@ have reddet dem.**
 udgivelser bærer commit-id i `ProductVersion`. Det hjælper en IT-afdeling. Det hjælper ikke en
 78-årig med makuladegeneration.
 
+*Offentlig kildekode skærper det:* arkivet er offentligt. En falsk kopi kan derfor se helt ægte
+ud — samme vinduer, samme tekster, bare med skærmoptagelse i. Til gengæld kan enhver IT-afdeling
+selv læse koden og bygge programmet. For den almindelige bruger gør det signeringen vigtigere,
+ikke mindre vigtig.
+
 *Det der skal til:* kodesignering (G1). Den vigtigste sikkerhedsopgave i projektet, og den
 eneste der koster penge frem for arbejde.
 
