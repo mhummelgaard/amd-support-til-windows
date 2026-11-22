@@ -109,7 +109,7 @@ med sig.
 **A5.** `CommunityToolkit.Mvvm` eller en .NET-runtimepakke kompromitteres opstrøms.
 
 *Det står i vejen:* angrebsfladen er usædvanligt lille — én tredjepartspakke i hele det udgivne
-program, og 56 native kald mod udelukkende `user32`, `gdi32` og `kernel32`. Der er
+program, og 61 native kald mod udelukkende `user32`, `gdi32` og `kernel32`. Der er
 [stykliste](sbom/) over leverancen, og `efterproev-dataflow.ps1` siger fra, hvis der pludselig
 kommer en afhængighed mere.
 

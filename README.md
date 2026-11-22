@@ -38,6 +38,7 @@ der ændrer det.
 | **Ctrl + Alt + H** | Vis eller skjul vejledningsbjælken. |
 | **Ctrl + Alt + S** | Åbn kontrolpanelet. |
 | **Ikonet ved uret** | Klik: kontrolpanelet. Højreklik: tænd og sluk, vejledning, afslut. På Windows 11 ligger det først bag "^" og skal trækkes frem én gang. |
+| **LUP-knappen i skærmkanten** | Berøringsskærm: tænder og slukker luppen. Plus og minus forstørrer, tandhjulet åbner indstillingerne. Luppen flyttes ved at trække i den med fingeren. |
 | **Ctrl + Alt + piletaster** | Flyt luppen uden mus. |
 
 Alle genveje står ét sted i koden — [`Shortcuts.cs`](src/Skaermlup.Core/Text/Shortcuts.cs) — og
@@ -122,6 +123,24 @@ rammer præcis den valgte gule og alt derunder følger med ned mod sort i samme 
 mellem kanalerne er dermed det samme hele vejen, og en blød bogstavkant skifter ikke farve på vej
 mod bunden.
 
+**Med fingeren flyttes luppen som et forstørrelsesglas.** På en berøringsskærm er hvert tryk et klik
+og hvert træk en rulning i programmet nedenunder. Pegede fingeren på luppen, som musen gør, ville
+et træk hen over en side rulle den, og et link åbne sig. I stedet trækker man i *selve luppen*, som
+man flytter et forstørrelsesglas hen over papiret — det sted, man greb fat, bliver under fingeren.
+Tryk uden for luppen virker som altid, og luppen bliver, hvor den er: Windows flytter musepilen hen
+til hvert tryk, men luppen ser bort fra det og lader sig kun flytte ved at pege af en rigtig mus.
+
+Til at tænde og forstørre er der store knapper i skærmkanten — LUP, plus, minus og tandhjulet —
+for på en finger findes hverken midterste museknap eller musehjul. De kommer af sig selv, når
+computeren har en berøringsskærm, tager ikke fokus fra det program man skriver i, og luppen lægger
+sig altid under dem. Kontrolpanelet og vejledningen ruller, når man trækker i dem med fingeren.
+
+Et tryk kan ikke gå *igennem* luppen til det, den viser. Musen går igennem et lille hul ved
+musepilen, men en finger rammer et vilkårligt sted, og Windows afgør hvilket vindue der får
+trykket, før musepilen er flyttet derhen. Den eneste anden vej — at gøre hele luppen gennemsigtig
+for input — afviser Windows på et WPF-vindue. Man trækker derfor luppen til side, eller slukker
+den, før man trykker på noget, den dækker.
+
 **Luppen følger skrivemarkøren og tastaturet.** Skriver man i et tekstfelt, flytter luppen med — indtil
 musen røres, for musen har altid forkørselsret. Flytter man rundt med Tab, følger luppen det felt, der
 får fokus: knapper, afkrydsningsfelter, rækker i en liste. Et klik flytter også fokus, men da står
@@ -161,7 +180,7 @@ Skaermlup.Desktop  ──►  Skaermlup.Core
 |---|---|
 | `src/Skaermlup.Core` | Geometri, forstørrelsestrin, farvefiltre, museudløser, indstillinger, alle tekster. Ingen afhængigheder — derfor testbart. |
 | `src/Skaermlup.Desktop` | WPF-vinduer, skærmkopiering, global musekrog og tastaturgenveje. Ingen tastaturaflytning — se [dataflowsporingen](docs/dataflow-og-compliance.md). |
-| `tests/Skaermlup.Tests` | 243 enhedstests af kernen. |
+| `tests/Skaermlup.Tests` | 266 enhedstests af kernen. |
 | `docs/` | [Dataflow og compliance](docs/dataflow-og-compliance.md), [trusselsmodel](docs/trusselsmodel.md) og [stykliste](docs/sbom/). Hver datastrøm sporet, og hvad den betyder for GDPR, NIS2, ISO og CRA. |
 | [`SECURITY.md`](SECURITY.md) | Sådan melder du en sårbarhed, og hvad du kan forvente. |
 
@@ -363,7 +382,7 @@ winget install Microsoft.DotNet.SDK.10 JRSoftware.InnoSetup Microsoft.PowerShell
 
 `Skaermlup.Core` er rent `net10.0` uden en eneste Windows-afhængighed. Det var et bevidst valg
 fra begyndelsen — al geometri, farvebehandling, museudløser og opskalering ligger dér — og det
-er derfor de 243 tests kan køres i et rent Linux-miljø, uafhængigt af hvad der tilfældigvis er
+er derfor de 266 tests kan køres i et rent Linux-miljø, uafhængigt af hvad der tilfældigvis er
 installeret på Windows-maskinen.
 
 `.devcontainer/` beskriver det miljø. I VS Code åbnes det med **Reopen in Container**. Uden

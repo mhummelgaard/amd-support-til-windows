@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Windows;
 using System.Windows.Threading;
+using Skaermlup.Core.Geometry;
 using Skaermlup.Core.Input;
 using Skaermlup.Core.Magnification;
 using Skaermlup.Core.Settings;
@@ -35,6 +36,7 @@ internal sealed class AppShell : IDisposable
 
     private InstructionBar? _bar;
     private TrayIcon? _tray;
+    private TouchControls? _touch;
     private MainWindow? _panel;
     private HelpWindow? _help;
     private bool _disposed;
@@ -43,7 +45,10 @@ internal sealed class AppShell : IDisposable
     {
         _store = store;
         Settings = settings;
-        Magnifier = new MagnifierService(settings);
+        Magnifier = new MagnifierService(settings, () => _mouse.LastTouchMs)
+        {
+            KeepLensBelow = () => _touch is { IsVisible: true } t ? t.Handle : IntPtr.Zero,
+        };
         Magnifier.Changed += (_, _) => RefreshInstructions();
 
         _instructionTimer = new DispatcherTimer(DispatcherPriority.Background)
@@ -120,6 +125,10 @@ internal sealed class AppShell : IDisposable
     // der læser den gamle værdi et øjeblik efter en ændring, gør ingen skade.
     private void OnMouseButton(object? sender, MouseButtonHookEventArgs e)
     {
+        // Et tryk med en finger eller en pen er ikke en museknap. Det må hverken tænde luppen
+        // (venstre + højre samtidig kunne ellers ramme ved et uheld) eller holdes tilbage.
+        if (e.FromTouchOrPen) return;
+
         TriggerDecision decision;
         lock (_triggerLock)
         {
@@ -159,6 +168,8 @@ internal sealed class AppShell : IDisposable
 
     private void OnMouseWheel(object? sender, MouseWheelHookEventArgs e)
     {
+        if (e.FromTouchOrPen) return;
+
         var decision = WheelRules.Decide(e.Delta, e.Control, e.Shift, Magnifier.IsActive, Settings.Wheel);
         e.Swallow = decision.Swallow;
 
@@ -323,6 +334,8 @@ internal sealed class AppShell : IDisposable
     {
         if (_disposed) return;
 
+        RefreshTouchControls();
+
         if (!Settings.ShowInstructions)
         {
             _bar?.Hide();
@@ -342,9 +355,55 @@ internal sealed class AppShell : IDisposable
             : ScreenInfo.CursorPosition();
         var monitor = ScreenInfo.WorkAreaAt(anchor);
 
-        _bar.Refresh(Magnifier.IsActive, Settings, monitor, MouseTriggerWorks);
+        _bar.Refresh(Magnifier.IsActive, Settings, monitor, MouseTriggerWorks, touch: GuideForTouch);
         _bar.Reassert();
     }
+
+    // ---------- Berøringsskærm ----------
+
+    /// <summary>Om knapperne til berøringsskærm står fremme lige nu.</summary>
+    public bool TouchControlsShown => _touch is { IsVisible: true };
+
+    /// <summary>Sandt når fingeren — ikke musen — var det, brugeren sidst brugte.</summary>
+    public bool LastInputWasTouch => _mouse.LastTouchMs > 0 && _mouse.LastTouchMs > _mouse.LastMouseMs;
+
+    /// <summary>
+    /// Vejledningen handler om touch-knapperne, når de står fremme og fingeren er i brug. Ellers
+    /// om museknappen og hjulet, som før.
+    /// </summary>
+    public bool GuideForTouch => TouchControlsShown && LastInputWasTouch;
+
+    private void RefreshTouchControls()
+    {
+        if (!Settings.TouchControlsWanted(ScreenInfo.HasTouchScreen))
+        {
+            _touch?.Hide();
+            return;
+        }
+
+        if (_touch is null)
+        {
+            _touch = new TouchControls();
+            _touch.PowerPressed += (_, _) => TouchPower();
+            _touch.ZoomInPressed += (_, _) => { Magnifier.ZoomIn(); SaveSoon(); };
+            _touch.ZoomOutPressed += (_, _) => { Magnifier.ZoomOut(); SaveSoon(); };
+            _touch.SettingsPressed += (_, _) => ShowControlPanel();
+        }
+
+        if (!_touch.IsVisible) _touch.Show();
+
+        // Knapperne står på hovedskærmen — den, hvis øverste venstre hjørne er (0,0).
+        _touch.Refresh(Magnifier.IsActive, Settings.TouchControlsSide, PrimaryWorkArea());
+        _touch.Reassert();
+    }
+
+    private void TouchPower()
+    {
+        if (Magnifier.IsActive) Magnifier.TurnOff();
+        else Magnifier.TurnOnForTouch(PrimaryWorkArea().Center);
+    }
+
+    private static PixelRect PrimaryWorkArea() => ScreenInfo.WorkAreaAt(PixelPoint.Zero);
 
     // ---------- Indstillinger ----------
 
@@ -426,6 +485,8 @@ internal sealed class AppShell : IDisposable
         _mouse.Dispose();
         _hotkeys.Dispose();
         _tray?.Dispose();
+        _touch?.Close();
+        _touch = null;
         _tray = null;
         Magnifier.Dispose();
 

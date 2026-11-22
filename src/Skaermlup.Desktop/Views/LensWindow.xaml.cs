@@ -4,6 +4,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Skaermlup.Core.Colors;
 using Skaermlup.Core.Geometry;
+using Skaermlup.Core.Input;
 using Skaermlup.Core.Magnification;
 using Skaermlup.Core.Settings;
 using Skaermlup.Desktop.Capture;
@@ -11,10 +12,37 @@ using Skaermlup.Desktop.Interop;
 
 namespace Skaermlup.Desktop.Views;
 
+internal enum TouchDragPhase
+{
+    Started,
+    Moved,
+    Ended,
+}
+
+/// <summary>En finger på luppen, i skærmpixels.</summary>
+internal sealed class TouchDragEventArgs(TouchDragPhase phase, PixelPoint point) : EventArgs
+{
+    public TouchDragPhase Phase { get; } = phase;
+    public PixelPoint Point { get; } = point;
+}
+
 /// <summary>Selve luppen: et gennemsigtigt-for-mus lag der viser det forstørrede skærmudsnit.</summary>
 public partial class LensWindow : Window
 {
+    // "Tryk og hold" bliver ellers til et højreklik, med en ring der vokser frem under fingeren,
+    // når man holder luppen stille for at læse. Flicks er pennens bevægelser — de skal heller ikke
+    // gøre noget her. Microsofts egne konstanter.
+    private const string TabletProperty = "MicrosoftTabletPenServiceProperty";
+    private const int TabletDisablePressAndHold = 0x00000001;
+    private const int TabletDisableFlicks = 0x00010000;
 
+    private bool _touchDragging;
+
+    /// <summary>
+    /// En finger trækker i luppen. Windows giver fingeren videre som museklik, mærket med hvor
+    /// de kom fra; kun dem fra en finger bruges. Musen går gennem hullet som altid.
+    /// </summary>
+    internal event EventHandler<TouchDragEventArgs>? TouchDrag;
 
     /// <summary>
     /// Hullets radius i pixels. Stort nok til at musen rammer det, selv når luppen er et par
@@ -69,6 +97,7 @@ public partial class LensWindow : Window
 
         _handle = new WindowInteropHelper(this).Handle;
         HiddenFromCapture = OverlayWindows.MakeOverlay(_handle);
+        NativeMethods.SetPropW(_handle, TabletProperty, new IntPtr(TabletDisablePressAndHold | TabletDisableFlicks));
         HwndSource.FromHwnd(_handle)?.AddHook(OnWindowMessage);
     }
 
@@ -79,7 +108,50 @@ public partial class LensWindow : Window
         if (msg is NativeMethods.WM_DPICHANGED or NativeMethods.WM_DISPLAYCHANGE)
             _appliedBounds = PixelRect.Empty;
 
+        switch (msg)
+        {
+            case NativeMethods.WM_LBUTTONDOWN when FromTouch():
+                // Hold fast i fingeren, også hvis den løber fra luppen. Ellers ville resten af
+                // trækket ende i programmet nedenunder — og fx markere tekst eller rulle siden.
+                NativeMethods.SetCapture(_handle);
+                _touchDragging = true;
+                RaiseTouchDrag(TouchDragPhase.Started);
+                handled = true;
+                break;
+
+            case NativeMethods.WM_MOUSEMOVE when _touchDragging:
+                RaiseTouchDrag(TouchDragPhase.Moved);
+                handled = true;
+                break;
+
+            case NativeMethods.WM_LBUTTONUP when _touchDragging:
+                _touchDragging = false;
+                NativeMethods.ReleaseCapture();
+                RaiseTouchDrag(TouchDragPhase.Ended);
+                handled = true;
+                break;
+
+            case NativeMethods.WM_CAPTURECHANGED when _touchDragging:
+                // Noget andet tog fingeren — fx Windows, der viste en dialog.
+                _touchDragging = false;
+                RaiseTouchDrag(TouchDragPhase.Ended);
+                break;
+        }
+
         return IntPtr.Zero;
+    }
+
+    private static bool FromTouch() => InputSignature.IsTouch((ulong)NativeMethods.GetMessageExtraInfo());
+
+    /// <summary>
+    /// Positionen tages fra beskeden selv og ikke fra vinduet. Luppen flytter sig under fingeren,
+    /// og regnede man ud fra vinduets plads, ville hver flytning give et nyt ryk.
+    /// </summary>
+    private void RaiseTouchDrag(TouchDragPhase phase)
+    {
+        uint pos = NativeMethods.GetMessagePos();
+        var point = new PixelPoint((short)(pos & 0xFFFF), (short)((pos >> 16) & 0xFFFF));
+        TouchDrag?.Invoke(this, new TouchDragEventArgs(phase, point));
     }
 
     internal void Present(MagnifierFrame frame, ScreenCapture capture, ColorMap map, AppSettings settings)
@@ -102,33 +174,50 @@ public partial class LensWindow : Window
         var shape = settings.Mode == ViewMode.Dock ? LensShape.Rectangle : settings.Shape;
         var hole = frame.HotSpot;
 
+        // Hullet er til musen, og kun når det er musen, luppen står ved. Er luppen trukket på plads
+        // med en finger, står musen et andet sted, og et hul midt i luppen ville blot lade en
+        // finger falde igennem til programmet nedenunder.
+        int radius = HoleAtFocus ? HoleRadius : 0;
+
         // Hullet flytter sig kun når luppen bliver klemt op mod en skærmkant. Ellers står
         // musen altid det samme sted i vinduet, og formen skal ikke sættes igen.
-        if (shape != _appliedShape || view.Size != _appliedShapeSize || hole != _appliedHole)
+        if (shape != _appliedShape || view.Size != _appliedShapeSize || hole != _appliedHole || radius != _appliedHoleRadius)
         {
             if (settings.Mode == ViewMode.Dock)
-                OverlayWindows.ApplyBandShape(_handle, view.Width, view.Height, hole, HoleRadius);
+                OverlayWindows.ApplyBandShape(_handle, view.Width, view.Height, hole, radius);
             else
-                OverlayWindows.ApplyShape(_handle, view.Width, view.Height, shape, 14, hole, HoleRadius);
+                OverlayWindows.ApplyShape(_handle, view.Width, view.Height, shape, 14, hole, radius);
 
             _appliedShape = shape;
             _appliedShapeSize = view.Size;
             _appliedHole = hole;
+            _appliedHoleRadius = radius;
         }
 
         if (moved)
         {
-            OverlayWindows.SetBounds(_handle, view, show: true);
+            OverlayWindows.SetBounds(_handle, view, show: true, KeepBelow);
             _appliedBounds = view;
             _framesSinceReassert = 0;
         }
         else if (++_framesSinceReassert > 30)
         {
             // Et andet program kan have lagt sig øverst. Kravl op igen med jævne mellemrum.
-            OverlayWindows.Reassert(_handle);
+            OverlayWindows.Reassert(_handle, KeepBelow);
             _framesSinceReassert = 0;
         }
     }
+
+    /// <summary>Om der skal være hul til musen, dér hvor luppen står. Se <see cref="ApplyBounds"/>.</summary>
+    internal bool HoleAtFocus { get; set; } = true;
+
+    /// <summary>
+    /// Et vindue luppen skal ligge lige under — touch-knapperne. Ellers ville luppen kunne lægge
+    /// sig oven på dem, og et tryk på LUP blev til et træk i luppen.
+    /// </summary>
+    internal IntPtr KeepBelow { get; set; }
+
+    private int _appliedHoleRadius = -1;
 
     private void ApplyChrome(AppSettings settings)
     {

@@ -65,4 +65,12 @@ internal static class ScreenInfo
         int h = NativeMethods.GetSystemMetrics(NativeMethods.SM_CYVIRTUALSCREEN);
         return w > 0 && h > 0 ? new PixelRect(x, y, w, h) : new PixelRect(0, 0, 1920, 1080);
     }
+
+    /// <summary>
+    /// Sandt når computeren har en berøringsskærm. Så vises touch-knapperne af sig selv.
+    /// Spørges hver gang, fordi en skærm med touch kan sættes til, mens programmet kører.
+    /// </summary>
+    public static bool HasTouchScreen => NativeMethods.GetSystemMetrics(SM_MAXIMUMTOUCHES) > 0;
+
+    private const int SM_MAXIMUMTOUCHES = 95;
 }

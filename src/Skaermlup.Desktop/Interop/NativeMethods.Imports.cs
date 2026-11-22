@@ -113,6 +113,29 @@ internal static partial class NativeMethods
     [DllImport("kernel32.dll")]
     public static extern uint GetCurrentThreadId();
 
+    // ---------- Fingeren på luppen ----------
+    // Windows giver et tryk på lupvinduet videre som museklik, mærket med hvor det kom fra.
+
+    /// <summary>Ekstra-oplysningen på den besked tråden sidst hentede. Fortæller om det var en finger.</summary>
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetMessageExtraInfo();
+
+    /// <summary>Hvor musepilen stod, da beskeden blev lagt i kø — i skærmpixels.</summary>
+    [DllImport("user32.dll")]
+    public static extern uint GetMessagePos();
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr SetCapture(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool ReleaseCapture();
+
+    /// <summary>Bruges til at slå "tryk og hold = højreklik" fra på luppen.</summary>
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool SetPropW(IntPtr hWnd, string lpString, IntPtr hData);
+
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     public static extern IntPtr GetModuleHandleW(string? lpModuleName);
 

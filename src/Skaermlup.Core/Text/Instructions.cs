@@ -58,8 +58,14 @@ public static class Instructions
     /// blive ved med at love at museknappen virker — det ville få brugeren til at tro at fejlen
     /// er deres egen.
     /// </param>
-    public static string CallToAction(bool magnifierOn, AppSettings settings, bool mouseWorks = true)
+    /// <param name="touch">
+    /// Sandt når fingeren var det, brugeren sidst brugte, og touch-knapperne står fremme. Så
+    /// handler vejledningen om dem — der er hverken museknap eller musehjul på en finger.
+    /// </param>
+    public static string CallToAction(bool magnifierOn, AppSettings settings, bool mouseWorks = true, bool touch = false)
     {
+        if (touch) return TouchText.CallToAction(magnifierOn);
+
         if (!mouseWorks)
             return "Museknappen virker ikke lige nu. Tryk "
                    + Shortcuts.DisplayFor(AppCommand.ToggleMagnifier)
@@ -82,8 +88,10 @@ public static class Instructions
     /// Falsk når lytteren på musen er væk. Både museknappen og hjulet går gennem den, så i det
     /// tilfælde vises tastaturets genveje i stedet for alle tre.
     /// </param>
-    public static IReadOnlyList<InstructionChip> Bar(bool magnifierOn, AppSettings settings, bool mouseWorks = true)
+    public static IReadOnlyList<InstructionChip> Bar(bool magnifierOn, AppSettings settings, bool mouseWorks = true, bool touch = false)
     {
+        if (touch) return TouchText.Bar(magnifierOn);
+
         string power = magnifierOn ? "sluk luppen" : "tænd luppen";
         var chips = new List<InstructionChip>
         {
@@ -145,6 +153,7 @@ public static class Instructions
             new InstructionChip("Skriv i et tekstfelt", "luppen følger selv skrivemarkøren"),
             new InstructionChip("Tab", "luppen følger med fra felt til felt"),
         ]),
+        TouchText.Guide,
         new("Vejledningen på skærmen", [
             new InstructionChip(Shortcuts.DisplayFor(AppCommand.ToggleInstructions), "viser eller skjuler bjælken med vejledningen"),
             new InstructionChip(Shortcuts.DisplayFor(AppCommand.ShowControlPanel), "åbner indstillingerne igen"),

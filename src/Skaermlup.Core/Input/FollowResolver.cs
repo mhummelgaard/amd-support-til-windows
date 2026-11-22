@@ -10,6 +10,9 @@ public enum FocusSource
 
     /// <summary>Det felt tastaturet står i — en knap, et afkrydsningsfelt, en række i en liste.</summary>
     Focus,
+
+    /// <summary>Luppen er trukket på plads med en finger, som et forstørrelsesglas.</summary>
+    Touch,
 }
 
 /// <summary>
@@ -26,6 +29,7 @@ public sealed class FollowResolver
     private PixelPoint _keyboardPoint;
     private PixelPoint _current;
     private PixelRect? _lastFocus;
+    private bool _focusPrimed;
     private bool _seeded;
 
     /// <summary>Hvor langt musen skal flytte sig for at overtage styringen igen.</summary>
@@ -56,13 +60,17 @@ public sealed class FollowResolver
             // Det felt der havde fokus, da luppen blev tændt, er ikke en bevægelse. Luppen
             // starter ved musen.
             _lastFocus = focus;
+            _focusPrimed = true;
             return _current;
         }
 
         // Et nyt fokusfelt bemærkes én gang, uanset hvem der vinder i denne omgang. Ellers ville
         // et fokusskift, som musen eller skrivemarkøren overtrumfede, springe frem senere.
-        bool focusMoved = FollowFocus && focus is { IsEmpty: false } && focus != _lastFocus;
+        // Er luppen tændt med en finger, er dette første gang feltet ses — og det er heller ikke
+        // en bevægelse.
+        bool focusMoved = FollowFocus && _focusPrimed && focus is { IsEmpty: false } && focus != _lastFocus;
         _lastFocus = focus;
+        _focusPrimed = true;
 
         int wake = Math.Max(1, MouseWakeDistancePx);
         if (mouse.DistanceSquaredTo(_mouseAnchor) >= wake * wake)
@@ -113,12 +121,35 @@ public sealed class FollowResolver
 
         _current = Source switch
         {
-            FocusSource.Keyboard => _keyboardPoint,
+            FocusSource.Keyboard or FocusSource.Touch => _keyboardPoint,
             FocusSource.Caret => _caretAnchor,
             FocusSource.Focus => _focusAnchor,
             _ => _mouseAnchor,
         };
         return _current;
+    }
+
+    /// <summary>
+    /// Luppen er trukket hen til et punkt med en finger. Den bliver dér, til musen, tekstmarkøren
+    /// eller tastaturet flytter den igen.
+    /// </summary>
+    /// <param name="point">Det punkt luppen skal vise.</param>
+    /// <param name="mouseNow">
+    /// Musens plads lige nu. Bruges kun hvis luppen lige er tændt, så musen ikke bagefter tror,
+    /// at den er flyttet langt og river luppen med sig.
+    /// </param>
+    public PixelPoint PlaceAt(PixelPoint point, PixelPoint mouseNow)
+    {
+        if (!_seeded)
+        {
+            _seeded = true;
+            _mouseAnchor = mouseNow;
+        }
+
+        _keyboardPoint = point;
+        Source = FocusSource.Touch;
+        _current = point;
+        return point;
     }
 
     /// <summary>Flytter fokuspunktet med tastaturet og låser styringen til tastaturet.</summary>

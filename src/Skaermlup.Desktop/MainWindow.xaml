@@ -43,7 +43,7 @@
             </DockPanel>
         </Border>
 
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0" Focusable="False">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0" Focusable="False" local:TouchScrolling.Enabled="True">
             <StackPanel Margin="24,20,24,24">
 
                 <!-- ============ Tænd og sluk ============ -->
@@ -303,6 +303,22 @@
                                   Content="Musehjulet alene ændrer forstørrelsen"/>
                         <TextBlock Style="{StaticResource Hint}" Margin="46,0,0,0"
                                    Text="Slået fra kan du rulle på sider som normalt, og Ctrl + hjul ændrer forstørrelsen."/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ Berøringsskærm ============ -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource H2}" Text="Berøringsskærm"/>
+                        <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,10"
+                                   Text="Store knapper i skærmkanten: LUP tænder og slukker, + og − forstørrer. Luppen flyttes ved at trække i den med fingeren, som et forstørrelsesglas. Knapperne kommer af sig selv, når computeren har en berøringsskærm."/>
+                        <CheckBox IsChecked="{Binding ShowTouchControls, Mode=TwoWay}"
+                                  Content="Vis knapperne til berøringsskærm"/>
+                        <TextBlock Style="{StaticResource H2}" Margin="0,20,0,6" Text="Hvor skal knapperne stå?"/>
+                        <RadioButton GroupName="TouchSide" IsChecked="{Binding TouchControlsRight, Mode=TwoWay}"
+                                     Content="I højre side af skærmen"/>
+                        <RadioButton GroupName="TouchSide" IsChecked="{Binding TouchControlsLeft, Mode=TwoWay}"
+                                     Content="I venstre side af skærmen"/>
                     </StackPanel>
                 </Border>
 

@@ -44,14 +44,67 @@ internal sealed class MagnifierService : IDisposable
     private CursorRingLayout _appliedRing = CursorRingLayout.None;
     private bool _disposed;
 
-    public MagnifierService(AppSettings settings)
+    /// <param name="lastTouchMs">
+    /// Hvornår en finger sidst rørte skærmen. Bruges til at holde fingerens tryk ude af musens
+    /// plads, så luppen ikke springer hen til hver knap, der trykkes på uden for den.
+    /// </param>
+    public MagnifierService(AppSettings settings, Func<long>? lastTouchMs = null)
     {
         _settings = settings;
+        _lastTouchMs = lastTouchMs ?? (() => 0);
         RebuildColorMap();
 
         _timer.Interval = TimeSpan.FromMilliseconds(1000.0 / 60);
         _timer.Tick += OnTick;
     }
+
+    private readonly Func<long> _lastTouchMs;
+    private PointerFilter _pointerFilter = new();
+    private PixelPoint _dragOffset;
+    private PixelPoint? _lastTouchFocus;
+
+    /// <summary>Et vindue luppen skal blive under — touch-knapperne, når de vises.</summary>
+    public Func<IntPtr>? KeepLensBelow { get; set; }
+
+    private LensWindow EnsureLens()
+    {
+        if (_lens is null)
+        {
+            _lens = new LensWindow();
+            _lens.TouchDrag += OnTouchDrag;
+        }
+        return _lens;
+    }
+
+    /// <summary>
+    /// En finger trækker i luppen. Luppen flytter sig med, og det sted fingeren greb fat, bliver
+    /// under fingeren — som når man flytter et forstørrelsesglas hen over papiret.
+    /// </summary>
+    private void OnTouchDrag(object? sender, TouchDragEventArgs e)
+    {
+        if (!IsActive) return;
+
+        if (e.Phase == TouchDragPhase.Started)
+        {
+            _dragOffset = new PixelPoint(e.Point.X - _follow.Current.X, e.Point.Y - _follow.Current.Y);
+            return;
+        }
+
+        var screen = ScreenInfo.VirtualScreen();
+        var focus = new PixelPoint(
+            Math.Clamp(e.Point.X - _dragOffset.X, screen.X, screen.Right - 1),
+            Math.Clamp(e.Point.Y - _dragOffset.Y, screen.Y, screen.Bottom - 1));
+
+        _follow.PlaceAt(focus, ScreenInfo.CursorPosition());
+        _lastTouchFocus = focus;
+        RenderOnce();
+    }
+
+    /// <summary>
+    /// Tænder luppen fra touch-knapperne. Musepilen står ved knappen — dér skal luppen ikke stå.
+    /// Den kommer frem, hvor den sidst blev trukket hen, eller midt på skærmen første gang.
+    /// </summary>
+    public void TurnOnForTouch(PixelPoint fallback) => TurnOn(_lastTouchFocus ?? fallback);
 
     /// <summary>Rejses når luppen tændes, slukkes eller ændrer sig, så vejledningen kan følge med.</summary>
     public event EventHandler? Changed;
@@ -75,8 +128,7 @@ internal sealed class MagnifierService : IDisposable
     {
         if (_disposed) return;
 
-        _lens ??= new LensWindow();
-        _lens.EnsureCreated();
+        EnsureLens().EnsureCreated();
     }
 
     public void Toggle()
@@ -84,16 +136,19 @@ internal sealed class MagnifierService : IDisposable
         if (IsActive) TurnOff(); else TurnOn();
     }
 
-    public void TurnOn()
+    /// <param name="at">Hvor luppen skal starte. Tom: ved musen.</param>
+    public void TurnOn(PixelPoint? at = null)
     {
         if (IsActive || _disposed) return;
 
         // Ny sporing hver gang, så luppen starter dér hvor musen er — ikke hvor den
         // stod sidst luppen var tændt.
         _follow = new FollowResolver { FollowCaret = _settings.FollowCaret, FollowFocus = _settings.FollowFocus };
+        _pointerFilter = new PointerFilter();
+        if (at is { } start) _follow.PlaceAt(start, ScreenInfo.CursorPosition());
         if (_settings.FollowFocus) _focus.Start();
 
-        _lens ??= new LensWindow();
+        _lens = EnsureLens();
         _lens.Show();
         _lens.EnsureClickThrough();
 
@@ -328,7 +383,9 @@ internal sealed class MagnifierService : IDisposable
         var field = _settings.FollowFocus && _focus.Current is { } f
             ? FocusFilter.Useful(f, ScreenInfo.MonitorAt(f.Center))
             : null;
-        var focus = _follow.Resolve(ScreenInfo.CursorPosition(), caret, field);
+        // Fingerens tryk flytter musepilen, men ikke luppen. Se PointerFilter.
+        var mouse = _pointerFilter.Update(ScreenInfo.CursorPosition(), Environment.TickCount64, _lastTouchMs());
+        var focus = _follow.Resolve(mouse, caret, field);
         var monitor = ScreenInfo.MonitorAt(focus);
         ActiveMonitor = monitor;
 
@@ -345,6 +402,8 @@ internal sealed class MagnifierService : IDisposable
 
         if (!_capture.Capture(frame.Source)) return;
 
+        _lens.HoleAtFocus = _follow.Source == FocusSource.Mouse;
+        _lens.KeepBelow = KeepLensBelow?.Invoke() ?? IntPtr.Zero;
         _lens.Present(frame, _capture, _colorMap, _settings);
     }
 

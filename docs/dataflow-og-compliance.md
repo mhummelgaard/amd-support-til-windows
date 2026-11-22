@@ -32,7 +32,7 @@ tjeneste.
 | Rettigheder ved kørsel | `asInvoker` — ikke forhøjede ([app.manifest](../src/Skaermlup.Desktop/app.manifest)) |
 | Rettigheder ved installation | Administrator, fordi der skrives til Programmer |
 | Tredjepartskode | Én pakke: `CommunityToolkit.Mvvm` 8.4.2. Ingen andre i det udgivne program. |
-| Native kald | 56 stk. fordelt på `user32.dll`, `gdi32.dll` og `kernel32.dll`. Ingen andre DLL'er. |
+| Native kald | 61 stk. fordelt på `user32.dll`, `gdi32.dll` og `kernel32.dll`. Ingen andre DLL'er. |
 
 ---
 
@@ -45,7 +45,7 @@ Elleve datastrømme. Kolonnen **Forlader maskinen** er den eneste, der for alvor
 | # | Data | Hvor det kommer fra | Hvad der sker med det | Hvor det ender | Levetid | Forlader maskinen |
 |---|---|---|---|---|---|---|
 | **D1** | **Skærmens billedpunkter** i det område luppen dækker | `BitBlt` fra en `DISPLAY`-enhedskontekst | Farvekort, ClearType-kantrensning, kantopskalering | Et `WriteableBitmap` i lupvinduet — altså skærmen | Overskrives ved hvert billede (op til 120/sek.), frigives ved `Dispose` | **Nej** |
-| **D2** | Musens position, knapper og hjul, på hele systemet | Lavniveaukrog `WH_MOUSE_LL` | Afgør om luppen skal tænde, zoome eller flytte sig | Hændelsesobjekt i hukommelsen | Pr. hændelse | **Nej** |
+| **D2** | Musens position, knapper og hjul, på hele systemet | Lavniveaukrog `WH_MOUSE_LL` | Afgør om luppen skal tænde, zoome eller flytte sig. Hver hændelse ses også efter for Windows' mærke om, at den kom fra en finger eller pen — kun mærket, og kun tidspunktet for sidste tryk huskes | Hændelsesobjekt i hukommelsen | Pr. hændelse | **Nej** |
 | **D3** | Om Ctrl og Skift er nede | `GetAsyncKeyState` — kun de to taster | Afgør hvad musehjulet gør | Ikke gemt | Øjeblikkelig | **Nej** |
 | **D4** | Skrivemarkørens rektangel i det aktive vindue | `GetGUIThreadInfo` | Luppen følger med, når man skriver | Ikke gemt | Pr. opslag | **Nej** |
 | **D5** | Det forreste vindues klassenavn og procesfil | `GetClassNameW`, `QueryFullProcessImageNameW` | Er det Start-menuen? Så flytter luppen sig | Ikke gemt | Pr. opslag | **Nej** |
@@ -150,7 +150,7 @@ De negative påstande er de vigtigste i dokumentet, så her står præcis hvor l
 |---|---|---|
 | Ingen netværkskald i programmets egen kode | Søgning efter `HttpClient`, `WebClient`, `WebRequest`, `Socket`, `System.Net`, `Dns`, `TcpClient`, `UdpClient`, `SmtpClient`, `WebSocket`, `HttpListener` i al kildekode: **nul træffere** | Stærk for førstepartskoden |
 | Ingen netværk via tredjepart | Én pakke i det udgivne program: `CommunityToolkit.Mvvm` (MVVM-hjælpeklasser, ingen I/O) | Stærk |
-| Ingen netværk via native kald | 56 `DllImport` mod udelukkende `user32`, `gdi32`, `kernel32`. Ingen `wininet`, `winhttp`, `ws2_32` | Stærk |
+| Ingen netværk via native kald | 61 `DllImport` mod udelukkende `user32`, `gdi32`, `kernel32`. Ingen `wininet`, `winhttp`, `ws2_32` | Stærk |
 | Ingen telemetri, ingen nedbrudsrapportering, ingen opdateringstjek | Ingen sådan kode findes; den eneste udgående kanal ville være netværk, og det er dækket ovenfor | Stærk |
 | Ingen tastaturaflytning | Ingen `WH_KEYBOARD`-krog. `GetAsyncKeyState` kun for Ctrl og Skift | Stærk |
 | **Programmet åbner ingen forbindelser under kørsel** | Observeret to gange: på 1.3.0 i almindelig brug og på den udgivne 1.5.0 med luppen tændt og UI Automation i gang. Begge gange: **`ws2_32.dll` aldrig indlæst**, og nul endepunkter | Stærk — se nedenfor |

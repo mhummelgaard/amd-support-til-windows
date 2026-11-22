@@ -79,6 +79,19 @@ public sealed class AppSettings
     /// </summary>
     public bool FollowFocus { get; set; } = true;
 
+    /// <summary>
+    /// Knapperne til berøringsskærm — LUP, plus, minus og indstillinger — i skærmkanten.
+    /// Tom betyder automatisk: de vises, når computeren har en berøringsskærm. Sætter brugeren
+    /// selv fluebenet, gælder det i stedet.
+    /// </summary>
+    public bool? ShowTouchControls { get; set; }
+
+    /// <summary>Hvilken kant touch-knapperne står ved.</summary>
+    public ScreenSide TouchControlsSide { get; set; } = ScreenSide.Right;
+
+    /// <summary>Om touch-knapperne skal vises, når det er overladt til computeren at afgøre.</summary>
+    public bool TouchControlsWanted(bool hasTouchScreen) => ShowTouchControls ?? hasTouchScreen;
+
     public bool ShowInstructions { get; set; } = true;
 
     public InstructionPlacement InstructionsAt { get; set; } = InstructionPlacement.Bottom;
@@ -118,6 +131,7 @@ public sealed class AppSettings
         if (!Enum.IsDefined(TriggerMode)) TriggerMode = TriggerMode.Toggle;
         if (!Enum.IsDefined(Wheel)) Wheel = WheelAction.ModifierOnly;
         if (!Enum.IsDefined(InstructionsAt)) InstructionsAt = InstructionPlacement.Bottom;
+        if (!Enum.IsDefined(TouchControlsSide)) TouchControlsSide = ScreenSide.Right;
 
         const MouseTriggerButtons all = MouseTriggerButtons.Middle | MouseTriggerButtons.SideBack
                                       | MouseTriggerButtons.SideForward | MouseTriggerButtons.LeftRightChord;

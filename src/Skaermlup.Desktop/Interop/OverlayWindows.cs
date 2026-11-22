@@ -8,10 +8,15 @@ namespace Skaermlup.Desktop.Interop;
 /// ses af skærmkopiering. Det sidste er afgørende: uden det ville luppen
 /// forstørre sit eget billede igen og igen.
 ///
-/// At musen går <em>igennem</em> laget kommer af to ting: WS_EX_TRANSPARENT her, og
-/// AllowsTransparency i vinduets XAML. Det sidste får WPF til selv at gøre vinduet lagdelt,
-/// og først med begge dele sender Windows klikket videre til programmet nedenunder. Sætter
-/// man WS_EX_LAYERED i stedet herfra, fjerner WPF den igen med det samme.
+/// At musen går <em>igennem</em> luppen, sker gennem et lille hul i vinduet netop dér, hvor musen
+/// står (se <see cref="ApplyShape"/>). WS_EX_TRANSPARENT alene sender ikke klikket videre, og et
+/// lagdelt vindue — det eneste der gør — kan ikke laves her: med AllowsTransparency tegnes det uden
+/// om grafikkortet og flimrer, og WS_EX_LAYERED sat udefra afviser Windows på et WPF-vindue
+/// (målt 2026-11-22: flaget er væk med det samme, uden at nogen fjerner det).
+///
+/// Det betyder også, at et tryk med en finger ikke kan gå igennem luppen: Windows afgør hvilket
+/// vindue der får trykket, før musepilen er flyttet hen til hullet. Derfor flyttes luppen med
+/// fingeren i stedet, som et forstørrelsesglas — se LensWindow.
 /// </summary>
 internal static class OverlayWindows
 {
@@ -27,27 +32,33 @@ internal static class OverlayWindows
         return NativeMethods.SetWindowDisplayAffinity(hwnd, NativeMethods.WDA_EXCLUDEFROMCAPTURE);
     }
 
-    public static void SetBounds(IntPtr hwnd, PixelRect rect, bool show)
+    /// <param name="below">
+    /// Et vindue der skal blive liggende ovenover. Er det selv øverst, bliver dette vindue det også
+    /// — bare lige under. Tomt: helt øverst.
+    /// </param>
+    public static void SetBounds(IntPtr hwnd, PixelRect rect, bool show, IntPtr below = default)
     {
         if (hwnd == IntPtr.Zero || rect.IsEmpty) return;
 
         uint flags = NativeMethods.SWP_NOACTIVATE;
         if (show) flags |= NativeMethods.SWP_SHOWWINDOW;
 
-        NativeMethods.SetWindowPos(hwnd, NativeMethods.HWND_TOPMOST,
+        NativeMethods.SetWindowPos(hwnd, InsertAfter(below),
             rect.X, rect.Y, rect.Width, rect.Height, flags);
     }
 
     /// <summary>
     /// Lægger vinduet øverst igen, hvis et andet program har lagt sig ovenpå.
     /// </summary>
-    public static void Reassert(IntPtr hwnd)
+    public static void Reassert(IntPtr hwnd, IntPtr below = default)
     {
         if (hwnd == IntPtr.Zero) return;
 
-        NativeMethods.SetWindowPos(hwnd, NativeMethods.HWND_TOPMOST, 0, 0, 0, 0,
+        NativeMethods.SetWindowPos(hwnd, InsertAfter(below), 0, 0, 0, 0,
             NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE);
     }
+
+    private static IntPtr InsertAfter(IntPtr below) => below == IntPtr.Zero ? NativeMethods.HWND_TOPMOST : below;
 
 
     /// <summary>

@@ -130,3 +130,10 @@ public enum MouseTriggerButtons
     /// <summary>Venstre og højre knap trykket samtidig — til mus uden ekstra knapper.</summary>
     LeftRightChord = 8,
 }
+
+/// <summary>Hvilken side af skærmen touch-knapperne står i.</summary>
+public enum ScreenSide
+{
+    Right = 0,
+    Left = 1,
+}

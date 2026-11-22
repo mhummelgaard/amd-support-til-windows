@@ -10,6 +10,9 @@ internal sealed class MouseButtonHookEventArgs : EventArgs
     public required bool IsDown { get; init; }
     public required long TimestampMs { get; init; }
 
+    /// <summary>Klikket kom fra en finger eller en pen, som Windows har lavet om til et museklik.</summary>
+    public required bool FromTouchOrPen { get; init; }
+
     /// <summary>Sæt til sandt for at holde klikket tilbage fra programmet under musen.</summary>
     public bool Swallow { get; set; }
 }
@@ -19,6 +22,7 @@ internal sealed class MouseWheelHookEventArgs : EventArgs
     public required int Delta { get; init; }
     public required bool Control { get; init; }
     public required bool Shift { get; init; }
+    public required bool FromTouchOrPen { get; init; }
     public bool Swallow { get; set; }
 }
 
@@ -68,6 +72,15 @@ internal sealed class GlobalMouseHook : IDisposable
 
     /// <summary>Hvor mange gange lytteren er sat op igen, fordi vagten mente den var væk.</summary>
     public int Reinstalls => Volatile.Read(ref _reinstalls);
+
+    /// <summary>Hvornår en finger sidst rørte skærmen, på <see cref="Environment.TickCount64"/>. 0 hvis aldrig.</summary>
+    public long LastTouchMs => Volatile.Read(ref _lastTouchMs);
+
+    /// <summary>Hvornår en rigtig mus sidst gjorde noget. 0 hvis aldrig.</summary>
+    public long LastMouseMs => Volatile.Read(ref _lastMouseMs);
+
+    private long _lastTouchMs;
+    private long _lastMouseMs;
 
     public bool Install()
     {
@@ -157,6 +170,13 @@ internal sealed class GlobalMouseHook : IDisposable
     {
         var data = Marshal.PtrToStructure<NativeMethods.MSLLHOOKSTRUCT>(lParam);
 
+        // Kom det fra en finger, en pen eller en rigtig mus? Windows mærker det i ekstra-oplysningen.
+        ulong extra = (ulong)data.dwExtraInfo;
+        bool penOrTouch = InputSignature.IsPenOrTouch(extra);
+        long now = Environment.TickCount64;
+        if (InputSignature.IsTouch(extra)) Volatile.Write(ref _lastTouchMs, now);
+        else if (!penOrTouch) Volatile.Write(ref _lastMouseMs, now);
+
         if (message == NativeMethods.WM_MOUSEWHEEL)
         {
             var wheel = new MouseWheelHookEventArgs
@@ -164,6 +184,7 @@ internal sealed class GlobalMouseHook : IDisposable
                 Delta = (short)((data.mouseData >> 16) & 0xFFFF),
                 Control = IsDown(NativeMethods.VK_CONTROL),
                 Shift = IsDown(NativeMethods.VK_SHIFT),
+                FromTouchOrPen = penOrTouch,
             };
             Wheel?.Invoke(this, wheel);
             return wheel.Swallow;
@@ -189,6 +210,7 @@ internal sealed class GlobalMouseHook : IDisposable
             Button = value.button,
             IsDown = value.isDown,
             TimestampMs = data.time,
+            FromTouchOrPen = penOrTouch,
         };
         Button?.Invoke(this, args);
         return args.Swallow;

@@ -38,6 +38,8 @@ internal static partial class NativeMethods
     public const int WM_DPICHANGED = 0x02E0;
     public const int WM_DISPLAYCHANGE = 0x007E;
 
+    public const int WM_MOUSEMOVE = 0x0200;
+    public const int WM_CAPTURECHANGED = 0x0215;
     public const int WM_LBUTTONDOWN = 0x0201;
     public const int WM_LBUTTONUP = 0x0202;
     public const int WM_RBUTTONDOWN = 0x0204;

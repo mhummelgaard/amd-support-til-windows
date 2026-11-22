@@ -68,7 +68,7 @@ internal sealed partial class ControlPanelViewModel : ObservableObject
 
     public string StatusHeadline => Instructions.Headline(IsOn, S);
 
-    public string StatusDetail => Instructions.CallToAction(IsOn, S, _shell.MouseTriggerWorks);
+    public string StatusDetail => Instructions.CallToAction(IsOn, S, _shell.MouseTriggerWorks, _shell.GuideForTouch);
 
     public IReadOnlyList<string> GettingStarted => Instructions.GettingStarted(S);
 
@@ -327,6 +327,30 @@ internal sealed partial class ControlPanelViewModel : ObservableObject
         set => Set(value, s => s.FollowFocus, (s, v) => s.FollowFocus = v);
     }
 
+    // ---------- Berøringsskærm ----------
+
+    /// <summary>
+    /// Fluebenet viser det, der gælder lige nu — også når det er overladt til computeren. Sætter
+    /// eller fjerner brugeren det, er det brugerens valg fra da af.
+    /// </summary>
+    public bool ShowTouchControls
+    {
+        get => S.TouchControlsWanted(ScreenInfo.HasTouchScreen);
+        set => Set<bool?>(value, s => s.ShowTouchControls, (s, v) => s.ShowTouchControls = v);
+    }
+
+    public bool TouchControlsRight
+    {
+        get => S.TouchControlsSide == ScreenSide.Right;
+        set { if (value) Set(ScreenSide.Right, s => s.TouchControlsSide, (s, v) => s.TouchControlsSide = v, nameof(TouchControlsRight)); }
+    }
+
+    public bool TouchControlsLeft
+    {
+        get => S.TouchControlsSide == ScreenSide.Left;
+        set { if (value) Set(ScreenSide.Left, s => s.TouchControlsSide, (s, v) => s.TouchControlsSide = v, nameof(TouchControlsLeft)); }
+    }
+
     public bool MarkerIsCrosshair
     {
         get => S.Marker == MarkerStyle.Crosshair;
@@ -496,6 +520,8 @@ internal sealed partial class ControlPanelViewModel : ObservableObject
         to.Wheel = from.Wheel;
         to.FollowCaret = from.FollowCaret;
         to.FollowFocus = from.FollowFocus;
+        to.ShowTouchControls = from.ShowTouchControls;
+        to.TouchControlsSide = from.TouchControlsSide;
         to.ShowInstructions = from.ShowInstructions;
         to.InstructionsAt = from.InstructionsAt;
         to.InstructionScale = from.InstructionScale;
