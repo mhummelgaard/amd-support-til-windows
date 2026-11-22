@@ -1,0 +1,104 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:68d82420-afad-4549-97f1-8bd3d02e263b",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-11-22T15:36:08Z",
+    "tools": {
+      "components": [
+        {
+          "name": "lav-sbom.ps1",
+          "type": "application",
+          "version": "1.0"
+        }
+      ]
+    },
+    "authors": [
+      {
+        "name": "Michael Hummelgaard"
+      }
+    ],
+    "component": {
+      "type": "application",
+      "bom-ref": "Skaermlup@1.7.0",
+      "name": "Skaermlup",
+      "version": "1.7.0",
+      "description": "Forstoerrelsesglas til skaermen for mennesker med AMD. Lokalt Windows-program uden netvaerk.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "285bfe2ebdd08dde38af25fb3592e2052e7c2e06cc1d447bd97aa759249ca562"
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "Skaermlup.Core@1.7.0",
+      "name": "Skaermlup.Core",
+      "version": "1.7.0",
+      "description": "Egen kerne: geometri, farvefiltre, museudloeser, indstillinger, alle tekster.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "CommunityToolkit.Mvvm@8.4.2",
+      "name": "CommunityToolkit.Mvvm",
+      "version": "8.4.2",
+      "description": "Eneste tredjepartspakke. MVVM-hjaelpeklasser, ingen ind- og uddata.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:nuget/CommunityToolkit.Mvvm@8.4.2"
+    },
+    {
+      "type": "framework",
+      "bom-ref": "Microsoft.NETCore.App.Runtime.win-x64@10.0.15",
+      "name": "Microsoft.NETCore.App.Runtime.win-x64",
+      "version": "10.0.15",
+      "description": "Del af .NET-koerselsmiljoeet. Udgivelsen er self-contained, saa den ligger med i mappen.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:nuget/Microsoft.NETCore.App.Runtime.win-x64@10.0.15"
+    },
+    {
+      "type": "framework",
+      "bom-ref": "Microsoft.WindowsDesktop.App.Runtime.win-x64@10.0.15",
+      "name": "Microsoft.WindowsDesktop.App.Runtime.win-x64",
+      "version": "10.0.15",
+      "description": "Del af .NET-koerselsmiljoeet. Udgivelsen er self-contained, saa den ligger med i mappen.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:nuget/Microsoft.WindowsDesktop.App.Runtime.win-x64@10.0.15"
+    }
+  ]
+}
