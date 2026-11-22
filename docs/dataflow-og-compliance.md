@@ -3,7 +3,7 @@
 Sporing af hver eneste datastrøm i Skærmlup, og hvad den betyder i forhold til GDPR, NIS2,
 ISO/IEC 27001 og CRA.
 
-**Version:** Skærmlup 1.6.0 · **Skrevet:** 2026-09-09, opdateret 2026-11-22 · **Gælder commit:** se `git log` for denne fil
+**Version:** Skærmlup 1.7.0 · **Skrevet:** 2026-09-09, opdateret 2026-11-22 · **Gælder commit:** se `git log` for denne fil
 
 ---
 
@@ -387,4 +387,4 @@ Dette dokument er kun sandt for den commit, det står i. Det skal gennemgås nå
 - `efterproev-dataflow.ps1` fejler
 - der overhovedet kommer noget netværk i programmet — så skal hele del A skrives om
 
-Sidst efterprøvet mod koden: 2026-11-22, Skærmlup 1.6.0.
+Sidst efterprøvet mod koden: 2026-11-22, Skærmlup 1.7.0.
