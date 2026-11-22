@@ -11,6 +11,9 @@ public enum LaunchKind
 
     /// <summary>Startet med --proevebillede for at gemme et billede til support.</summary>
     Sample = 2,
+
+    /// <summary>Startet med --proevebillede, men IT har slået prøvebilleder fra på denne pc.</summary>
+    SampleBlocked = 3,
 }
 
 /// <summary>
@@ -28,14 +31,22 @@ public sealed record StartupPlan(LaunchKind Kind, bool ShowControlPanel, bool Tu
 
     public const string SampleArgument = "--proevebillede=";
 
-    public static StartupPlan From(IReadOnlyList<string> args, AppSettings settings)
+    public static StartupPlan From(IReadOnlyList<string> args, AppSettings settings, MachinePolicy? policy = null)
     {
         ArgumentNullException.ThrowIfNull(args);
         ArgumentNullException.ThrowIfNull(settings);
+        policy ??= MachinePolicy.None;
 
-        // Et prøvebillede skal vise luppen, så den tændes. Kontrolpanelet åbnes af prøvebilledet selv.
         if (SampleFolderIn(args) is { } folder)
+        {
+            // Slået fra af IT: luppen tændes ikke, for der skal ikke tages noget billede. Programmet
+            // siger kun fra og lukker igen. Mappen huskes ikke — der skal ikke skrives noget i den.
+            if (policy.SampleImagesBlocked)
+                return new StartupPlan(LaunchKind.SampleBlocked, ShowControlPanel: false, TurnLensOn: false, null);
+
+            // Et prøvebillede skal vise luppen, så den tændes. Kontrolpanelet åbnes af prøvebilledet selv.
             return new StartupPlan(LaunchKind.Sample, ShowControlPanel: false, TurnLensOn: true, folder);
+        }
 
         bool withWindows = args.Any(a => string.Equals(a, WithWindowsArgument, StringComparison.OrdinalIgnoreCase));
 

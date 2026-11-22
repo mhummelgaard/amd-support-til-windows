@@ -92,10 +92,59 @@ Test-Paastand 'Skrivning til disk kun fra de kendte steder' {
         ForEach-Object { "$($_.Filename):$($_.LineNumber)  $($_.Line.Trim())" }
 }
 
-Test-Paastand 'Registreringsdatabasen roeres kun i brugerens egen gren' {
-    $cs | Select-String -Pattern 'Registry\.' |
+Test-Paastand 'Registreringsdatabasen roeres kun i brugerens egen gren — undtagen IT-politikken (D12)' {
+    $cs | Select-String -Pattern 'Registry\.|RegistryKey\.OpenBaseKey|RegistryHive' |
         Where-Object { $_.Line -notmatch 'Registry\.CurrentUser|RegistryValueKind' } |
+        Where-Object { -not ($_.Filename -eq 'MachinePolicyReader.cs' -and $_.Line -match 'Registry\.LocalMachine\.OpenSubKey\(MachinePolicy\.RegistryPath\)') } |
         ForEach-Object { "$($_.Filename):$($_.LineNumber)  $($_.Line.Trim())" }
+}
+
+Test-Paastand 'IT-politikken under HKLM laeses kun — der skrives aldrig (D12)' {
+    $cs | Where-Object Name -eq 'MachinePolicyReader.cs' |
+        Select-String -Pattern 'CreateSubKey|SetValue|DeleteValue|DeleteSubKey|SetAccessControl|writable|OpenSubKey\([^)]*,' |
+        ForEach-Object { "$($_.Filename):$($_.LineNumber)  $($_.Line.Trim())" }
+}
+
+Test-Paastand 'Proevebilleder gemmes kun eet sted, og foerst efter IT-politikken er spurgt (D10, D12)' {
+    $kald = @($cs | Select-String -Pattern 'DiagnosticImages\.SaveTo\(')
+    $kald | Where-Object Filename -ne 'AppShell.cs' |
+        ForEach-Object { "$($_.Filename):$($_.LineNumber)  kalder DiagnosticImages.SaveTo uden for AppShell" }
+
+    foreach ($k in $kald | Where-Object Filename -eq 'AppShell.cs') {
+        $linjer = Get-Content $k.Path
+        $foer = $linjer[[math]::Max(0, $k.LineNumber - 4)..($k.LineNumber - 2)] -join "`n"
+        if ($foer -notmatch 'MachinePolicyReader\.Read\(\)\.SampleImagesBlocked') {
+            "AppShell.cs:$($k.LineNumber)  DiagnosticImages.SaveTo uden at spoerge MachinePolicyReader lige foer"
+        }
+    }
+
+    if ($kald.Count -eq 0) { 'DiagnosticImages.SaveTo blev ikke fundet — er paastanden stadig rigtig formuleret?' }
+}
+
+Test-Paastand 'Gruppepolitikskabelonen skriver netop der, hvor programmet laeser (D12)' {
+    $mappe = Join-Path $Rod 'installer/gruppepolitik'
+    $admxFil = Join-Path $mappe 'Skaermlup.admx'
+    if (-not (Test-Path $admxFil)) { return 'installer/gruppepolitik/Skaermlup.admx mangler' }
+
+    $policy = Get-Content -Raw (Join-Path $kilde 'Skaermlup.Core/Settings/MachinePolicy.cs')
+    $sti    = [regex]::Match($policy, 'RegistryPath\s*=\s*@"([^"]+)"').Groups[1].Value
+    $vaerdi = [regex]::Match($policy, 'SampleImagesValue\s*=\s*"([^"]+)"').Groups[1].Value
+
+    $admx = [xml](Get-Content -Raw $admxFil)
+    foreach ($p in $admx.policyDefinitions.policies.policy) {
+        if ($p.class -ne 'Machine') { "$($p.name): class er '$($p.class)', skal vaere Machine" }
+        if ($p.key -ne $sti) { "$($p.name): key '$($p.key)', programmet laeser '$sti'" }
+        if ($p.valueName -ne $vaerdi) { "$($p.name): valueName '$($p.valueName)', programmet laeser '$vaerdi'" }
+    }
+
+    # Hver tekst skabelonen henviser til, skal findes på alle sprog.
+    $henvisninger = [regex]::Matches((Get-Content -Raw $admxFil), '\$\(string\.([^)]+)\)') |
+                    ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
+    foreach ($adml in Get-ChildItem $mappe -Recurse -Filter *.adml) {
+        $ider = ([xml](Get-Content -Raw $adml.FullName)).policyDefinitionResources.resources.stringTable.string.id
+        $henvisninger | Where-Object { $_ -notin $ider } |
+            ForEach-Object { "$($adml.Directory.Name)/$($adml.Name): mangler teksten '$_'" }
+    }
 }
 
 Test-Paastand 'Programmet starter kun stifinderen, og kun fra advarselsvinduet' {

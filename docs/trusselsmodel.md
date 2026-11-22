@@ -71,7 +71,7 @@ gør intet ved T1.** Andre maskiner kender ikke roden, og at bede fremmede insta
 hjemmelavet rod er præcis den slags, en svindler ville bede om. Den må aldrig sendes ud til
 brugere.
 
-### T2 — Kør lige den her kommando og send mig billederne · **Høj** · delvist afværget
+### T2 — Kør lige den her kommando og send mig billederne · **Høj** · delvist afværget — helt, hvor IT har lukket det
 
 **A1.** Svindleren ringer, udgiver sig for support, og får brugeren til at køre
 `--proevebillede` og sende PNG-filerne. Billederne viser skærmen — og brugeren kan i sagens
@@ -81,8 +81,14 @@ natur ikke selv læse, hvad der kom med.
 skriftstørrelse: de viser hvad der stod på skærmen, se dem igennem før de sendes, spørg en du
 stoler på. Teksten er låst fast med tests, så den ikke kan skrives om til noget venligt og vagt.
 
-*Restrisiko:* en advarsel stopper ikke en, der allerede har talt brugeren rundt. Den gør
-risikoen synlig for den, der løber den. Mere kan et program ikke gøre her.
+*Og hvor det ikke er godt nok:* IT kan slå prøvebilleder helt fra for hele pc'en med
+gruppepolitikken `DisableSampleImages` (D12 i [compliancedokumentet](dataflow-og-compliance.md)).
+Så gemmes der intet, uanset hvad svindleren siger, og brugeren kan ikke selv slå det til igen —
+værdien ligger, hvor kun en administrator kan skrive.
+
+*Restrisiko:* uden politikken stopper en advarsel ikke en, der allerede har talt brugeren
+rundt. Den gør risikoen synlig for den, der løber den. Mere kan et program ikke gøre for en
+bruger, der selv skal kunne bede om hjælp.
 
 ### T3 — Autostart peget et andet sted hen · **Middel** · afhængig af Windows
 
@@ -154,8 +160,8 @@ er en lup der ser forkert ud, indtil den stilles tilbage.
 
 1. **Kodesignering er den vigtigste opgave i projektet.** T1 er den eneste høje trussel, der
    ikke er afværget, den rammer den mest udsatte gruppe, og den løses med penge frem for arbejde.
-2. **Advarslen ved prøvebilleder er gjort** (T2). Mere kan koden ikke gøre ved social
-   manipulation.
+2. **Advarslen ved prøvebilleder er gjort, og IT kan lukke dem helt** (T2). Mere kan koden ikke
+   gøre ved social manipulation.
 3. **Angrebsfladen skal holdes lille.** Den er projektets bedste sikkerhedsegenskab, og den er
    nem at miste ved et uheld. Derfor fejler `efterproev-dataflow.ps1`, hvis der kommer en
    afhængighed, et netværkskald eller en fremmed DLL med.

@@ -58,10 +58,17 @@ public partial class App : Application
 
         var store = new SettingsStore(SettingsStore.DefaultPath);
         var settings = store.Load();
-        var plan = StartupPlan.From(e.Args, settings);
+        var plan = StartupPlan.From(e.Args, settings, MachinePolicyReader.Read());
 
         _shell = new AppShell(store, settings);
         _shell.Start(turnLensOn: plan.TurnLensOn);
+
+        if (plan.Kind == LaunchKind.SampleBlocked)
+        {
+            // Startet kun for at tage et prøvebillede, og det må den ikke. Sig det, og luk.
+            _shell.ShowSampleBlocked().Closed += (_, _) => Shutdown();
+            return;
+        }
 
         if (plan is { Kind: LaunchKind.Sample, SampleFolder: { } folder })
         {
@@ -100,16 +107,11 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// Gemmer billederne og advarer om hvad de indeholder. De to veje ind i
-    /// prøvebilledet deler denne, så advarslen ikke kan glemmes det ene sted.
+    /// Gemmer billederne og advarer om hvad de indeholder — eller siger fra, hvis IT har slået
+    /// prøvebilleder fra. De to veje ind i prøvebilledet deler denne, så hverken advarslen eller
+    /// IT's politik kan glemmes det ene sted.
     /// </summary>
-    private Window? SaveSampleAndWarn(string folder)
-    {
-        if (_shell is null) return null;
-
-        var saved = _shell.SaveDiagnosticImages(folder);
-        return _shell.ShowSampleSaved(folder, saved);
-    }
+    private Window? SaveSampleAndWarn(string folder) => _shell?.SaveSample(folder);
 
     /// <summary>
     /// Supportfunktion: lad luppen tegne et par billeder, gem dem, og luk. Luppen kan ikke

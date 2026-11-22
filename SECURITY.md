@@ -52,7 +52,8 @@ gør, at et af dem kan komme til at gøre noget, brugeren ikke har bedt om.
 - **Programmet lytter på musen på hele systemet.** Ellers kunne luppen ikke tændes med en
   museknap uden først at finde noget på skærmen. Der er ingen tastaturaflytning.
 - **Prøvebilleder kan indeholde alt, hvad der stod på skærmen.** Det er meningen med et
-  prøvebillede. Programmet advarer om det, når billedet er taget.
+  prøvebillede. Programmet advarer om det, når billedet er taget, og IT kan slå prøvebilleder
+  helt fra for hele pc'en med gruppepolitik — se [README](README.md#for-it-afdelingen).
 - **SmartScreen advarer ved installation.** Programmet er endnu ikke kodesigneret. Det er et
   kendt hul — se G1 i [dataflow-og-compliance.md](docs/dataflow-og-compliance.md).
 - Sårbarheder i Windows selv eller i andre programmer.
@@ -64,4 +65,4 @@ Sikkerhedsegenskaberne er sporet i koden og efterprøvet, ikke bare påstået:
 - [Dataflow og compliance](docs/dataflow-og-compliance.md) — hver datastrøm i programmet
 - [Trusselsmodel](docs/trusselsmodel.md) — hvem kunne finde på at angribe det, og hvordan
 - [Stykliste](docs/sbom/) — hvad der ligger i leverancen
-- `pwsh -File docs/efterproev-dataflow.ps1` — ti kontroller, der fejler hvis en påstand falder
+- `pwsh -File docs/efterproev-dataflow.ps1` — fjorten kontroller, der fejler hvis en påstand falder

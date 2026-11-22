@@ -38,4 +38,22 @@ public static class SampleWarning
     public const string OpenFolder = "Åbn mappen med billederne";
 
     public const string Close = "Luk";
+
+    // ---------- Når IT har slået prøvebilleder fra (MachinePolicy) ----------
+    //
+    // Ikke en advarsel men en besked: der er ikke sket noget farligt. Brugeren skal vide tre ting —
+    // at der ikke blev gemt noget, at luppen stadig virker, og hvem de skal spørge.
+
+    public const string BlockedTitle = "Skærmlup — prøvebilleder er slået fra";
+
+    public const string BlockedHeadline = "Prøvebilleder er slået fra på denne pc";
+
+    public const string BlockedSubheadline = "Det har din IT-afdeling bestemt";
+
+    public static IReadOnlyList<string> BlockedBody { get; } =
+    [
+        "Der er ikke gemt noget billede af din skærm.",
+        "Luppen virker, som den plejer. Det er kun prøvebillederne, der er slået fra.",
+        "Har du brug for hjælp til Skærmlup, så kontakt din egen IT-afdeling.",
+    ];
 }

@@ -40,7 +40,7 @@ tjeneste.
 
 ## A.1 Datafortegnelse
 
-Elleve datastrømme. Kolonnen **Forlader maskinen** er den eneste, der for alvor betyder noget.
+Tolv datastrømme. Kolonnen **Forlader maskinen** er den eneste, der for alvor betyder noget.
 
 | # | Data | Hvor det kommer fra | Hvad der sker med det | Hvor det ender | Levetid | Forlader maskinen |
 |---|---|---|---|---|---|---|
@@ -53,8 +53,9 @@ Elleve datastrømme. Kolonnen **Forlader maskinen** er den eneste, der for alvor
 | **D7** | Markør-vagtflag | Programmet selv | Tekstfil med én linje | `%LocalAppData%\Skaermlup\musepil-skjult` | Mens luppen er tændt | **Nej** |
 | **D8** | Statusfil | Programmet og Windows | Version, tidspunkt, OS-version, skærmgeometri, om museknap og genveje virker, sti til indstillinger | `%LocalAppData%\Skaermlup\diagnostik.txt` | Overskrives ved hver opstart | **Nej** |
 | **D9** | Autostart | Brugerens eget tilvalg | Strengværdi med programstien | `HKCU\...\CurrentVersion\Run\Skaermlup` | Til fravalg eller afinstallation | **Nej** |
-| **D10** | **Prøvebilleder til support** | Brugeren kører `--proevebillede=<mappe>` | Vinduerne tegner sig selv til PNG | En mappe **brugeren selv angiver** | Til brugeren sletter dem | **Kun hvis brugeren selv sender dem videre** |
+| **D10** | **Prøvebilleder til support** | Brugeren kører `--proevebillede=<mappe>` | Vinduerne tegner sig selv til PNG | En mappe **brugeren selv angiver** | Til brugeren sletter dem | **Kun hvis brugeren selv sender dem videre.** IT kan lukke vejen helt for hele pc'en (D12) |
 | **D11** | **Hvor tastaturets fokus er** — kun placeringen af feltet | UI Automation: Windows' svar på hvilket felt der har fokus, og dets rektangel | Luppen følger med, når brugeren flytter rundt med Tab | Ikke gemt | Til næste fokusskift. Kun mens luppen er tændt — slukket lyttes der slet ikke | **Nej** |
+| **D12** | IT-afdelingens politik for hele pc'en: om prøvebilleder må gemmes | `HKLM\SOFTWARE\Policies\Skaermlup\DisableSampleImages`, sat af en administrator eller en gruppepolitik | Læses ved opstart og hver gang der bedes om et prøvebillede. **Programmet skriver aldrig dér** | Ikke gemt | Pr. opslag | **Nej** |
 
 Kildehenvisninger: D1 [`ScreenCapture.cs`](../src/Skaermlup.Desktop/Capture/ScreenCapture.cs),
 [`ColorPipeline.cs`](../src/Skaermlup.Core/Colors/ColorPipeline.cs) ·
@@ -67,7 +68,9 @@ D8 [`AppShell.cs`](../src/Skaermlup.Desktop/Services/AppShell.cs) ·
 D9 [`StartupRegistration.cs`](../src/Skaermlup.Desktop/Services/StartupRegistration.cs) ·
 D10 [`DiagnosticImages.cs`](../src/Skaermlup.Desktop/Services/DiagnosticImages.cs),
 [`SampleRequest.cs`](../src/Skaermlup.Desktop/Services/SampleRequest.cs)
-· D11 [`FocusTracker.cs`](../src/Skaermlup.Desktop/Interop/FocusTracker.cs)
+· D11 [`FocusTracker.cs`](../src/Skaermlup.Desktop/Interop/FocusTracker.cs) ·
+D12 [`MachinePolicyReader.cs`](../src/Skaermlup.Desktop/Services/MachinePolicyReader.cs),
+[`MachinePolicy.cs`](../src/Skaermlup.Core/Settings/MachinePolicy.cs)
 
 D11 kommer fra samme kilde som Windows' egen Forstørrelse og Oplæser. Programmet spørger kun om
 *hvor* feltet er — aldrig hvad det hedder, og aldrig hvad der står i det, heller ikke i et
@@ -94,6 +97,7 @@ flowchart TB
         proces -->|"D6 D7 D8"| appdata["Mappe under %LocalAppData%"]
         proces -->|"D9 tilvalgt"| reg["Autostart under HKCU"]
         proces -.->|"D10 kun på brugerens kommando"| mappe["Mappe brugeren selv vælger"]
+        politik["IT-politik under HKLM<br/>kun læst"] -->|"D12 kan lukke D10"| proces
     end
 
     net(["Internet"])
@@ -129,6 +133,15 @@ Det er ikke en fejl — det er hele pointen med billedet — men det betyder:
   knap åbner mappen, for at finde en mappe frem er svært nok med fuldt syn. Teksterne
   ligger i [`SampleWarning`](../src/Skaermlup.Core/Text/SampleWarning.cs) og er dækket af
   tests, så de ikke kan skrives om til noget venligt og vagt.
+- **IT kan lukke vejen helt (D12).** På en arbejdsplads med fortrolige eller klassificerede
+  oplysninger er en advarsel ikke nok. Sættes `DisableSampleImages` = 1 under
+  `HKLM\SOFTWARE\Policies\Skaermlup` — med gruppepolitikskabelonen i
+  [`installer/gruppepolitik/`](../installer/gruppepolitik/) eller med `reg add` — gemmer
+  programmet aldrig et prøvebillede på den pc. Brugeren får en besked om, at IT har slået det
+  fra, og luppen virker som før. Værdien ligger hvor kun en administrator kan skrive, så
+  brugeren kan ikke selv slå den fra igen. Kan den ikke læses, holdes prøvebillederne lukket.
+  Der er ét sted i koden, prøvebilleder gemmes, og politikken spørges lige før;
+  `efterproev-dataflow.ps1` fejler, hvis en anden vej kommer til.
 
 ## A.4 Sikkerhedsegenskaber der allerede er der
 
@@ -263,12 +276,21 @@ Hvad der typisk bliver spurgt om, og hvor projektet står:
 
 | Forventning i forsyningskæden | Status |
 |---|---|
-| Sikker udvikling og versionsstyring | **God.** Alt i Git, 191 tests, lagdelt arkitektur med en kerne uden systemafhængigheder |
+| Sikker udvikling og versionsstyring | **God.** Alt i Git, 289 tests, lagdelt arkitektur med en kerne uden systemafhængigheder |
+| Central styring af funktioner, der kan lække | **God.** Prøvebilleder — den eneste vej, skærmindhold kan havne på disk — slås fra for hele pc'en med gruppepolitik (D12) |
 | Håndtering af sårbarheder | **God.** [SECURITY.md](../SECURITY.md) med adresse og svarfrister |
 | Styklister over komponenter (SBOM) | **God.** CycloneDX, genereret ud af byggeriet ved hver udgivelse |
 | Integritet af det udleverede | **Mangler.** Installeren er ikke kodesigneret. Se G1 |
 | Hændelseshåndtering | **Ikke relevant** som enhed, men kunden vil vide, hvordan de får fat i udvikleren |
 | Kryptering, adgangsstyring, netværkssikkerhed | **Ikke relevant.** Der er ingen tjeneste, ingen konti og ingen netværkstrafik |
+
+**Forsvarsindustri og klassificerede systemer.** NIS2-loven undtager offentlige myndigheder, der
+arbejder med forsvar og national sikkerhed — men ikke private virksomheder, der fremstiller
+forsvarsmateriel. De er omfattet som enhver anden producent i bilag II, hvis de er store nok.
+Arbejder de med klassificerede oplysninger, gælder desuden Forsvarets Efterretningstjenestes
+regler for industrisikkerhed, og så er det virksomhedens sikkerhedsofficer, der godkender hvert
+program på de pc'er. Der er D10 det første, der bliver spurgt til, og derfor kan den lukkes
+centralt (D12).
 
 Den danske gennemførelse af NIS2 skal slås efter i sin nuværende form, før noget af dette lægges
 til grund over for en myndighed. Jeg angiver bevidst ingen dato her.
@@ -323,7 +345,7 @@ små, er der ingenting at haste med senere.
 | # | Hul | Hvorfor det betyder noget | Omfang |
 |---|---|---|---|
 | **G1** | **Installeren er ikke kodesigneret** | Brugeren kan ikke se, om filen er ægte, og SmartScreen advarer ved hver installation. En bruger med AMD, der er blevet lært at klikke advarsler væk, er en sikkerhedsrisiko i sig selv. Rammer NIS2-forsyningskæde, CRA og A.8.25 på én gang | Køb af certifikat. Byggeriet er klar via `-CertificateThumbprint` |
-| **G2** | **Prøvebilleder kan indeholde alt** | Se A.3. Brugeren kan i sagens natur ikke altid læse, hvad billedet viser, før det sendes | Lille |
+| **G2** | **Prøvebilleder kan indeholde alt** | Se A.3. Brugeren kan i sagens natur ikke altid læse, hvad billedet viser, før det sendes | **Kan lukkes af IT.** Med gruppepolitikken `DisableSampleImages` (D12) gemmes der aldrig prøvebilleder på den pc |
 | ~~**G3**~~ | ~~Ingen advarsel på skærmen ved `--proevebillede`~~ | **Lukket.** Efter et prøvebillede vises et vindue i programmets egen skriftstørrelse: billederne viser hvad der stod på skærmen, se dem igennem før de sendes. Knap der åbner mappen. Teksterne ligger i `SampleWarning` og er dækket af tests | Gjort |
 | ~~**G4**~~ | ~~Ingen kanal til at melde sårbarheder~~ | **Lukket.** [SECURITY.md](../SECURITY.md): adresse, svarfrister, hvad der er i spil og hvad der er design | Gjort |
 | ~~**G5**~~ | ~~Ingen SBOM~~ | **Lukket.** CycloneDX 1.6 i [docs/sbom/](sbom/), genereret af `installer/lav-sbom.ps1` ud af `Skaermlup.deps.json` — ikke skrevet i hånden | Gjort |
@@ -334,17 +356,18 @@ små, er der ingenting at haste med senere.
 [trusselsmodellen](trusselsmodel.md). Den er også den eneste, der koster penge frem for
 arbejde.
 
-G2 er ikke et hul, der kan lukkes: et prøvebillede *skal* vise skærmen for at være til
-nogen nytte. G3 gør risikoen synlig for den, der løber den, og det er så langt et program
-kan komme.
+G2 er ikke et hul, programmet kan lukke på egen hånd: et prøvebillede *skal* vise skærmen for
+at være til nogen nytte. G3 gør risikoen synlig for den, der løber den. Hvor risikoen ikke kan
+accepteres — fortrolige eller klassificerede oplysninger — lukker IT funktionen helt med D12.
 
 ## B.6 Hvad man svarer i et udbud
 
 Den korte version, til at klippe ind i et spørgeskema:
 
 > Skærmlup er et lokalt Windows-program uden konto, server eller netværksforbindelse. Programmet
-> forstørrer skærmens indhold i maskinens egen hukommelse og gemmer aldrig skærmindhold på disk.
-> Der sendes ingen data til leverandøren, og leverandøren er derfor hverken dataansvarlig eller
+> forstørrer skærmens indhold i maskinens egen hukommelse og gemmer ikke skærmindhold på disk af
+> sig selv — kun når brugeren udtrykkeligt beder om et prøvebillede til support, og den mulighed
+> kan IT slå helt fra for hele pc'en med gruppepolitik. Der sendes ingen data til leverandøren, og leverandøren er derfor hverken dataansvarlig eller
 > databehandler efter databeskyttelsesforordningen. Programmet lagrer alene brugerens egne
 > indstillinger og en statusfil lokalt under brugerens profil. Der er ingen tastaturaflytning, og
 > programmet kører uden forhøjede rettigheder. Dataflowet er sporet og efterprøvet i

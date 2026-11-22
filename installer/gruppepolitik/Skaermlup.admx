@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Gruppepolitikskabelon til Skærmlup.
+
+  Kopiér Skaermlup.admx til PolicyDefinitions og sprogfilerne (da-DK, en-US) til de tilsvarende
+  undermapper. Indstillingen står derefter under
+  Computerkonfiguration > Administrative skabeloner > Skærmlup.
+
+  Den skriver HKLM\SOFTWARE\Policies\Skaermlup\DisableSampleImages = 1 (DWORD).
+-->
+<policyDefinitions xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   revision="1.0" schemaVersion="1.0"
+                   xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitions">
+  <policyNamespaces>
+    <target prefix="skaermlup" namespace="Hummelgaard.Policies.Skaermlup" />
+  </policyNamespaces>
+  <resources minRequiredRevision="1.0" />
+  <supportedOn>
+    <definitions>
+      <definition name="SUPPORTED_Skaermlup_1_7" displayName="$(string.SUPPORTED_Skaermlup_1_7)" />
+    </definitions>
+  </supportedOn>
+  <categories>
+    <category name="Skaermlup" displayName="$(string.Skaermlup)" />
+  </categories>
+  <policies>
+    <policy name="DisableSampleImages" class="Machine"
+            displayName="$(string.DisableSampleImages)"
+            explainText="$(string.DisableSampleImages_Explain)"
+            key="SOFTWARE\Policies\Skaermlup" valueName="DisableSampleImages">
+      <parentCategory ref="Skaermlup" />
+      <supportedOn ref="SUPPORTED_Skaermlup_1_7" />
+      <enabledValue>
+        <decimal value="1" />
+      </enabledValue>
+      <disabledValue>
+        <decimal value="0" />
+      </disabledValue>
+    </policy>
+  </policies>
+</policyDefinitions>

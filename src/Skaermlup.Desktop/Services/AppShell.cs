@@ -301,18 +301,30 @@ internal sealed class AppShell : IDisposable
         _panel.Activate();
     }
 
-    /// <summary>Kun til support: gemmer et billede af luppen og bjælken som de ser ud nu.</summary>
-    public IReadOnlyList<string> SaveDiagnosticImages(string folder)
-        => DiagnosticImages.SaveTo(folder, Magnifier.LensWindow, _bar, _panel, _help);
-
     /// <summary>
-    /// Siger tydeligt fra bagefter: billederne viser skærmen. Vinduet returneres, fordi
-    /// den kopi af programmet der kun blev startet for at tage prøvebilledet, skal blive
-    /// stående indtil advarslen er læst — ikke lukke ned midt i den.
+    /// Kun til support: gemmer et billede af luppen og bjælken som de ser ud nu, og siger tydeligt
+    /// fra bagefter — billederne viser skærmen.
+    ///
+    /// Den eneste vej til <see cref="DiagnosticImages"/>. Har IT slået prøvebilleder fra, gemmes
+    /// intet, og brugeren får at vide hvorfor. Spørgsmålet stilles her og ikke længere oppe, så
+    /// ingen fremtidig vej ind i prøvebilledet kan komme uden om det.
+    ///
+    /// Vinduet returneres, fordi den kopi af programmet der kun blev startet for at tage
+    /// prøvebilledet, skal blive stående indtil beskeden er læst — ikke lukke ned midt i den.
     /// </summary>
-    public Window ShowSampleSaved(string folder, IReadOnlyList<string> savedFiles)
+    public Window SaveSample(string folder)
     {
-        var window = new SampleSavedWindow(folder, savedFiles);
+        if (MachinePolicyReader.Read().SampleImagesBlocked) return ShowSampleBlocked();
+
+        var saved = DiagnosticImages.SaveTo(folder, Magnifier.LensWindow, _bar, _panel, _help);
+        return Present(new SampleSavedWindow(folder, saved));
+    }
+
+    /// <summary>IT har slået prøvebilleder fra. Intet er gemt; brugeren får at vide hvorfor.</summary>
+    public Window ShowSampleBlocked() => Present(SampleSavedWindow.Blocked());
+
+    private static Window Present(Window window)
+    {
         window.Show();
         window.Activate();
         return window;

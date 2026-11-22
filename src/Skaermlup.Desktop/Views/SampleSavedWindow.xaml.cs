@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using System.Windows.Media;
 using Skaermlup.Core.Text;
 
 namespace Skaermlup.Desktop.Views;
@@ -38,6 +39,47 @@ public partial class SampleSavedWindow : Window
 
         // Knappen er ligegyldig hvis der ikke er noget at åbne.
         OpenButton.IsEnabled = savedFiles.Count > 0;
+    }
+
+    private SampleSavedWindow()
+    {
+        InitializeComponent();
+        _folder = string.Empty;
+    }
+
+    /// <summary>
+    /// IT har slået prøvebilleder fra på denne pc (<see cref="Core.Settings.MachinePolicy"/>).
+    /// Samme vindue og samme skriftstørrelse, men ikke advarselsfarvet: der er ikke sket noget
+    /// farligt, og en rød besked ville skræmme uden grund. Ingen mappe, ingen filer — kun en
+    /// forklaring og en knap til at lukke.
+    /// </summary>
+    public static SampleSavedWindow Blocked()
+    {
+        var window = new SampleSavedWindow
+        {
+            Title = SampleWarning.BlockedTitle,
+            Height = 560,
+        };
+
+        window.Headline.Text = SampleWarning.BlockedHeadline;
+        window.Subheadline.Text = SampleWarning.BlockedSubheadline;
+        window.Body.ItemsSource = SampleWarning.BlockedBody;
+
+        // Farverne hentes ved navn, så et kontrasttema stadig bytter dem ud.
+        window.HeaderBand.Background = (Brush)window.FindResource("Primary");
+        window.Subheadline.Foreground = (Brush)window.FindResource("OnDarkMuted");
+        window.BodyCard.Background = (Brush)window.FindResource("Surface");
+        window.BodyCard.BorderBrush = (Brush)window.FindResource("Line");
+
+        window.FolderCard.Visibility = Visibility.Collapsed;
+        window.OpenButton.Visibility = Visibility.Collapsed;
+
+        // Den eneste knap er den, brugeren skal trykke på. Den står tydeligt og har fokus.
+        window.CloseButton.Content = SampleWarning.Close;
+        window.CloseButton.Style = (Style)window.FindResource("PrimaryButton");
+        window.Loaded += (_, _) => window.CloseButton.Focus();
+
+        return window;
     }
 
     /// <summary>

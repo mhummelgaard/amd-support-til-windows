@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<policyDefinitionResources xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                           revision="1.0" schemaVersion="1.0"
+                           xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitions">
+  <displayName>Skærmlup</displayName>
+  <description>Settings for Skærmlup, a screen magnifier.</description>
+  <resources>
+    <stringTable>
+      <string id="Skaermlup">Skærmlup</string>
+      <string id="SUPPORTED_Skaermlup_1_7">Skærmlup 1.7.0 or later</string>
+      <string id="DisableSampleImages">Turn off sample images</string>
+      <string id="DisableSampleImages_Explain">A sample image is a picture of Skærmlup's windows that the user can save and send to support with the --proevebillede command. The lens shows magnified screen content, so a sample image can contain anything that was on the screen at that moment — including confidential or classified information.
+
+Enabled: Skærmlup never saves sample images on this computer. If someone tries, nothing is saved, and the user is told that their IT department has turned it off. The magnifier itself works as before.
+
+Disabled or not configured: sample images can be saved. Skærmlup shows a warning about their content every time they are saved.
+
+The setting lives under HKEY_LOCAL_MACHINE, so users cannot turn it back off themselves. Skærmlup reads it every time a sample image is requested; a change takes effect without a restart.
+
+Registry: HKLM\SOFTWARE\Policies\Skaermlup, value DisableSampleImages (DWORD) = 1.</string>
+    </stringTable>
+  </resources>
+</policyDefinitionResources>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<policyDefinitionResources xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                           revision="1.0" schemaVersion="1.0"
+                           xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitions">
+  <displayName>Skærmlup</displayName>
+  <description>Indstillinger for Skærmlup, forstørrelsesglas til skærmen.</description>
+  <resources>
+    <stringTable>
+      <string id="Skaermlup">Skærmlup</string>
+      <string id="SUPPORTED_Skaermlup_1_7">Skærmlup 1.7.0 eller nyere</string>
+      <string id="DisableSampleImages">Slå prøvebilleder fra</string>
+      <string id="DisableSampleImages_Explain">Et prøvebillede er et billede af Skærmlups vinduer, som brugeren kan gemme og sende til support med kommandoen --proevebillede. Luppen viser forstørret skærmindhold, så et prøvebillede kan indeholde alt, hvad der stod på skærmen i det øjeblik — også fortrolige eller klassificerede oplysninger.
+
+Aktiveret: Skærmlup gemmer aldrig prøvebilleder på denne pc. Prøver nogen, gemmes der intet, og brugeren får en besked om, at IT-afdelingen har slået det fra. Selve luppen virker som før.
+
+Deaktiveret eller ikke konfigureret: prøvebilleder kan gemmes. Skærmlup viser en advarsel om indholdet, hver gang de er gemt.
+
+Indstillingen ligger under HKEY_LOCAL_MACHINE, så brugeren ikke selv kan slå den fra igen. Skærmlup læser den hver gang, der bedes om et prøvebillede; en ændring virker uden genstart.
+
+Registreringsdatabase: HKLM\SOFTWARE\Policies\Skaermlup, værdien DisableSampleImages (DWORD) = 1.</string>
+    </stringTable>
+  </resources>
+</policyDefinitionResources>

@@ -180,7 +180,7 @@ Skaermlup.Desktop  ──►  Skaermlup.Core
 |---|---|
 | `src/Skaermlup.Core` | Geometri, forstørrelsestrin, farvefiltre, museudløser, indstillinger, alle tekster. Ingen afhængigheder — derfor testbart. |
 | `src/Skaermlup.Desktop` | WPF-vinduer, skærmkopiering, global musekrog og tastaturgenveje. Ingen tastaturaflytning — se [dataflowsporingen](docs/dataflow-og-compliance.md). |
-| `tests/Skaermlup.Tests` | 266 enhedstests af kernen. |
+| `tests/Skaermlup.Tests` | 289 enhedstests af kernen. |
 | `docs/` | [Dataflow og compliance](docs/dataflow-og-compliance.md), [trusselsmodel](docs/trusselsmodel.md) og [stykliste](docs/sbom/). Hver datastrøm sporet, og hvad den betyder for GDPR, NIS2, ISO og CRA. |
 | [`SECURITY.md`](SECURITY.md) | Sådan melder du en sårbarhed, og hvad du kan forvente. |
 
@@ -382,7 +382,7 @@ winget install Microsoft.DotNet.SDK.10 JRSoftware.InnoSetup Microsoft.PowerShell
 
 `Skaermlup.Core` er rent `net10.0` uden en eneste Windows-afhængighed. Det var et bevidst valg
 fra begyndelsen — al geometri, farvebehandling, museudløser og opskalering ligger dér — og det
-er derfor de 266 tests kan køres i et rent Linux-miljø, uafhængigt af hvad der tilfældigvis er
+er derfor de 289 tests kan køres i et rent Linux-miljø, uafhængigt af hvad der tilfældigvis er
 installeret på Windows-maskinen.
 
 `.devcontainer/` beskriver det miljø. I VS Code åbnes det med **Reopen in Container**. Uden
@@ -427,6 +427,34 @@ af luppen, vejledningsbjælken, kontrolpanelet og vejledningen. Det er sådan bi
 
 `Skaermlup.exe --start` starter med luppen tændt og uden at åbne kontrolpanelet. Det er den
 genvej "Start sammen med Windows" bruger.
+
+## For IT-afdelingen
+
+Skærmlup kører uden forhøjede rettigheder, uden netværk og uden konto. Hvad programmet læser og
+skriver, står i [dataflowsporingen](docs/dataflow-og-compliance.md), og hvad der kunne gå galt,
+i [trusselsmodellen](docs/trusselsmodel.md).
+
+### Slå prøvebilleder fra
+
+Et prøvebillede viser, hvad der stod på skærmen. Er der fortrolige eller klassificerede
+oplysninger på pc'en, kan funktionen slås helt fra for hele pc'en.
+
+**Med gruppepolitik:** kopiér `installer/gruppepolitik/Skaermlup.admx` til `PolicyDefinitions`
+(på pc'en `C:\Windows\PolicyDefinitions`, eller domænets centrale lager) og sprogfilerne
+`da-DK\Skaermlup.adml` og `en-US\Skaermlup.adml` til de tilsvarende undermapper. Indstillingen
+står under *Computerkonfiguration → Administrative skabeloner → Skærmlup → Slå prøvebilleder
+fra*. Intune kan importere den samme skabelon.
+
+**Direkte i registreringsdatabasen**, som administrator:
+
+```powershell
+reg add HKLM\SOFTWARE\Policies\Skaermlup /v DisableSampleImages /t REG_DWORD /d 1 /f
+```
+
+Derefter gemmes der aldrig et prøvebillede på den pc. Prøver nogen, gemmes intet, og brugeren
+får en besked om, at IT-afdelingen har slået det fra. Luppen virker som før. Brugeren kan ikke
+selv slå det til igen, og ændringen virker med det samme, uden genstart. Kræver Skærmlup 1.7.0
+eller nyere.
 
 ## Krav
 
